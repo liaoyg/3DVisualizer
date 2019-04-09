@@ -25,7 +25,7 @@
 # matches the default Vrui installation; if Vrui's installation
 # directory was changed during Vrui's installation, the directory below
 # must be adapted.
-VRUI_MAKEDIR := $(HOME)/Vrui-3.0/share/make
+VRUI_MAKEDIR := $(HOME)/Vrui/share/Vrui-4.6/make
 ifdef DEBUG
   VRUI_MAKEDIR := $(VRUI_MAKEDIR)/debug
 endif
