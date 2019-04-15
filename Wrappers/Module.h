@@ -52,6 +52,8 @@ template <class DataSetWrapperParam>
 class MultiStreamlineExtractor;
 template <class DataSetWrapperParam>
 class StreamsurfaceExtractor;
+template <class DataSetWrapperParam>
+class Vector3DLICRendererExtractor;
 }
 }
 
@@ -79,6 +81,7 @@ class Module:public Visualization::Abstract::Module
 	typedef Visualization::Wrappers::StreamlineExtractor<DataSet> StreamlineExtractor; // Streamline extractor class
 	typedef Visualization::Wrappers::MultiStreamlineExtractor<DataSet> MultiStreamlineExtractor; // Streamline bundle extractor class
 	typedef Visualization::Wrappers::StreamsurfaceExtractor<DataSet> StreamsurfaceExtractor; // Stream surface extractor class
+        typedef Visualization::Wrappers::Vector3DLICRendererExtractor<DataSet> Vector3DLICRendererExtractor; // 3D LIC extractor class
 	
 	/* Constructors and destructors: */
 	Module(const char* sClassName);

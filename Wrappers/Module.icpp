@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Wrappers/ArrowRakeExtractor.h>
 #include <Wrappers/StreamlineExtractor.h>
 #include <Wrappers/MultiStreamlineExtractor.h>
+#include <Wrappers/Vector3DLICRendererExtractor.h>
+
 // #include <Wrappers/StreamsurfaceExtractor.h>
 
 #include <Wrappers/Module.h>
@@ -160,7 +162,7 @@ int
 Module<DSParam,DataValueParam>::getNumVectorAlgorithms(
 	void) const
 	{
-	return 3;
+	return 4;
 	}
 
 template <class DSParam,class DataValueParam>
@@ -169,7 +171,7 @@ const char*
 Module<DSParam,DataValueParam>::getVectorAlgorithmName(
 	int vectorAlgorithmIndex) const
 	{
-	if(vectorAlgorithmIndex<0||vectorAlgorithmIndex>=3)
+	if(vectorAlgorithmIndex<0||vectorAlgorithmIndex>=4)
 		Misc::throwStdErr("Module::getVectorAlgorithmName: invalid algorithm index %d",vectorAlgorithmIndex);
 	
 	const char* result=0;
@@ -186,9 +188,12 @@ Module<DSParam,DataValueParam>::getVectorAlgorithmName(
 		case 2:
 			result=MultiStreamlineExtractor::getClassName();
 			break;
-		
+                        
+                case 3:
+                        result=Vector3DLICRendererExtractor::getClassName();
+                        break;
 		#if 0
-		case 3:
+		case 4:
 			result=StreamsurfaceExtractor::getClassName();
 			break;
 		#endif
@@ -204,7 +209,7 @@ Module<DSParam,DataValueParam>::getVectorAlgorithm(
 	Visualization::Abstract::VariableManager* variableManager,
 	Cluster::MulticastPipe* pipe) const
 	{
-	if(vectorAlgorithmIndex<0||vectorAlgorithmIndex>=3)
+	if(vectorAlgorithmIndex<0||vectorAlgorithmIndex>=4)
 		Misc::throwStdErr("Module::getAlgorithm: invalid algorithm index %d",vectorAlgorithmIndex);
 	
 	Visualization::Abstract::Algorithm* result=0;
@@ -221,9 +226,12 @@ Module<DSParam,DataValueParam>::getVectorAlgorithm(
 		case 2:
 			result=new MultiStreamlineExtractor(variableManager,pipe);
 			break;
+                case 3:
+			result=new Vector3DLICRendererExtractor(variableManager,pipe);
+			break;
 		
 		#if 0
-		case 3:
+		case 4:
 			result=new StreamsurfaceExtractor(variableManager,pipe);
 			break;
 		#endif

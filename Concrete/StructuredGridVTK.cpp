@@ -286,13 +286,15 @@ Visualization::Abstract::DataSet* StructuredGridVTK::load(const std::vector<std:
 				for(index[0]=0;index[0]<numVertices[0];++index[0])
 					{
 					/* Read the next vertex: */
+                                        if(gridSource.peekc() == '\n')
+                                            gridSource.getChar();
 					gridSource.skipWs();
 					DS::Point& vertex=dataSet.getVertexPosition(index);
 					for(int i=0;i<3;++i)
 						vertex[i]=DS::Scalar(gridSource.readNumber());
-					if(gridSource.getChar()!='\n')
-						Misc::throwStdErr("StructuredGridVTK::load: Invalid vertex position in VTK data file %s",args[0].c_str());
-					}
+//					if(gridSource.getChar()!='\n')
+//						Misc::throwStdErr("StructuredGridVTK::load: Invalid vertex position in VTK data file %s",args[0].c_str());
+                                        }
 			if(master)
 				std::cout<<"\b\b\b\b"<<std::setw(3)<<((index[2]+1)*100+numVertices[2]/2)/numVertices[2]<<"%"<<std::flush;
 			}
@@ -321,6 +323,8 @@ Visualization::Abstract::DataSet* StructuredGridVTK::load(const std::vector<std:
 		IO::ValueSource attributeSource(file);
 		attributeSource.setPunctuation('\n',true);
 		attributeSource.skipWs();
+                if(attributeSource.peekc() == '\n')
+                        attributeSource.getChar();
 		if(attributeSource.readString()!="POINT_DATA")
 			{
 			/* No more attributes: */
@@ -443,15 +447,17 @@ Visualization::Abstract::DataSet* StructuredGridVTK::load(const std::vector<std:
 						for(index[0]=0;index[0]<numVertices[0];++index[0])
 							{
 							/* Read the next attribute: */
+                                                        if(attributeSource.peekc() == '\n')
+                                                            attributeSource.getChar();
 							attributeSource.skipWs();
 							
 							/* Read the vector value in Cartesian coordinates: */
 							DataValue::VVector vector;
 							for(int i=0;i<3;++i)
 								vector[i]=DataValue::VVector::Scalar(attributeSource.readNumber());
-							if(attributeSource.getChar()!='\n')
-								Misc::throwStdErr("StructuredGridVTK::load: Invalid vector attribute in in VTK data file %s",args[0].c_str());
-							
+//							if(attributeSource.getChar()!='\n')
+//								Misc::throwStdErr("StructuredGridVTK::load: Invalid vector attribute in in VTK data file %s",args[0].c_str());
+//							
 							/* Store the vector's components and magnitude: */
 							for(int i=0;i<3;++i)
 								dataSet.getVertexValue(sliceIndex+i,index)=vector[i];
@@ -464,13 +470,14 @@ Visualization::Abstract::DataSet* StructuredGridVTK::load(const std::vector<std:
 						for(index[0]=0;index[0]<numVertices[0];++index[0])
 							{
 							/* Read the next attribute: */
+                                                        if(attributeSource.peekc() == '\n')
+                                                            attributeSource.getChar();
 							attributeSource.skipWs();
-							
 							/* Read the first scalar attribute from the line: */
 							dataSet.getVertexValue(sliceIndex,index)=DS::ValueScalar(attributeSource.readNumber());
 							
 							/* Skip the rest of the line: */
-							attributeSource.skipLine();
+//							attributeSource.skipLine();
 							}
 					}
 				if(master)
