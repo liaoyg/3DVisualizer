@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Abstract/Element.h>
 
 /* Forward declarations: */
-class TripleChannelRaycaster;
+class LICRaycaster;
 
 namespace Visualization {
 
@@ -51,7 +51,7 @@ class Vector3DLICRenderer:public Visualization::Abstract::Element
 	
 	/* Elements: */
 	private:
-	TripleChannelRaycaster* raycaster; // A raycasting volume renderer
+	LICRaycaster* raycaster; // A raycasting volume renderer
 	
 	/* UI components: */
 	GLMotif::ToggleButton* channelEnabledToggles[3]; // Toggle buttons to enable/disable individual channels

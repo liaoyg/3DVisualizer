@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Wrappers/Vector3DLICRendererExtractor.h>
 
 #include <GLRenderState.h>
-#include <TripleChannelRaycaster.h>
+#include <LICRaycaster.h>
 
 namespace Visualization {
 
@@ -89,7 +89,7 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 	Visualization::Templatized::VolumeRenderingSampler<DS> sampler(ds);
 	
 	/* Initialize the raycaster: */
-	raycaster=new TripleChannelRaycaster(sampler.getSamplerSize(),ds.getDomainBox());
+	raycaster=new LICRaycaster(sampler.getSamplerSize(),ds.getDomainBox());
 	
 	/* Sample the three scalar channels: */
 	for(int channel=0;channel<3;++channel)
