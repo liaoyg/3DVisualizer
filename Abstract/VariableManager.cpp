@@ -147,7 +147,7 @@ VariableManager::VariableManager(const DataSet* sDataSet,const char* sDefaultCol
 	 scalarVariables(0),
 	 colorBarDialogPopup(0),colorBar(0),
 	 paletteEditor(0),
-	 vectorExtractors(0),
+	 vectorExtractors(0), colorMapLIC(0),
 	 currentScalarVariableIndex(-1),currentVectorVariableIndex(-1)
 	{
 	if(sDefaultColorMapName!=0)
@@ -398,6 +398,13 @@ int VariableManager::getVectorVariable(const VectorExtractor* vectorExtractor) c
 	
 	return -1;
 	}
+
+const GLColorMap* VariableManager::getColorMapLIC()
+        {
+        if(colorMapLIC==0)
+            colorMapLIC=new GLColorMap(GLColorMap::GREYSCALE|GLColorMap::RAMP_ALPHA,1.0f,1.0f,-12.0f,16.0f);
+        return colorMapLIC;
+        }
 
 void VariableManager::showColorBar(bool show)
 	{

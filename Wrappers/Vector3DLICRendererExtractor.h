@@ -78,6 +78,7 @@ class Vector3DLICRendererExtractor:public Visualization::Abstract::Algorithm
 		
 		/* Elements: */
 		private:
+                int vectorVariableIndex;
 		int scalarVariableIndices[3]; // Indices of the scalar variables for direct volume rendering
 		VScalar outOfDomainValues[3]; // Values to assign to volume renderer voxels that are outside the data set's domain
 		Scalar sliceFactor; // Slice distance for texture- or raycasting-based volume rendering

@@ -66,7 +66,12 @@ class VolumeRenderingSampler
 		}
 	template <class ScalarExtractorParam,class VoxelParam>
 	void sample(const ScalarExtractorParam& scalarExtractor,typename ScalarExtractorParam::Scalar minValue,typename ScalarExtractorParam::Scalar maxValue,typename ScalarExtractorParam::Scalar outOfDomainValue,VoxelParam* voxels,const ptrdiff_t voxelStrides[3],Cluster::MulticastPipe* pipe,float percentageScale,float percentageOffset,Visualization::Abstract::Algorithm* algorithm) const; // Samples scalar values from the given scalar extractor into the given voxel block
-	};
+	template <class ScalarExtractorParam,class VoxelParam>
+        void sampleDirect(const ScalarExtractorParam& scalarExtractor,typename ScalarExtractorParam::Scalar outOfDomainValue,VoxelParam* voxels,const ptrdiff_t voxelStrides[3],Cluster::MulticastPipe* pipe,float percentageScale,float percentageOffset,Visualization::Abstract::Algorithm* algorithm) const; // Samples scalar values from the given scalar extractor into the given voxel block
+	template <class VectorExtractorParam,class VoxelParam>
+        void sampleVec(const VectorExtractorParam& vectorExtractor, VoxelParam* voxels,const ptrdiff_t voxelStrides[3],Cluster::MulticastPipe* pipe,float percentageScale,float percentageOffset,Visualization::Abstract::Algorithm* algorithm) const; // Samples scalar values from the given scalar extractor into the given voxel block
+	
+        };
 
 }
 

@@ -97,9 +97,9 @@ Methods of class Visualizer:
 
 GLMotif::Popup* Visualizer::createRenderingModesMenu(void)
 	{
-	GLMotif::Popup* renderingModesMenuPopup=new GLMotif::Popup("RenderingModesMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* renderingModesMenu=new GLMotif::PopupMenu("RenderingModesMenuPopup",Vrui::getWidgetManager());
 	
-	GLMotif::SubMenu* renderingModesMenu=new GLMotif::SubMenu("RenderingModesMenu",renderingModesMenuPopup,false);
+//	GLMotif::SubMenu* renderingModesMenu=new GLMotif::SubMenu("RenderingModesMenu",renderingModesMenuPopup,false);
 	
 	GLMotif::RadioBox* renderingModes=new GLMotif::RadioBox("RenderingModes",renderingModesMenu,false);
 	renderingModes->setSelectionMode(GLMotif::RadioBox::ATMOST_ONE);
@@ -130,16 +130,16 @@ GLMotif::Popup* Visualizer::createRenderingModesMenu(void)
 			}
 		}
 	
-	renderingModesMenu->manageChild();
+	renderingModesMenu->manageMenu();
 	
-	return renderingModesMenuPopup;
+	return renderingModesMenu;
 	}
 
 GLMotif::Popup* Visualizer::createScalarVariablesMenu(void)
 	{
-	GLMotif::Popup* scalarVariablesMenuPopup=new GLMotif::Popup("ScalarVariablesMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* scalarVariablesMenu=new GLMotif::PopupMenu("ScalarVariablesMenuPopup",Vrui::getWidgetManager());
 	
-	GLMotif::RadioBox* scalarVariables=new GLMotif::RadioBox("ScalarVariables",scalarVariablesMenuPopup,false);
+	GLMotif::RadioBox* scalarVariables=new GLMotif::RadioBox("ScalarVariables",scalarVariablesMenu,false);
 	scalarVariables->setSelectionMode(GLMotif::RadioBox::ALWAYS_ONE);
 	
 	for(int i=0;i<variableManager->getNumScalarVariables();++i)
@@ -149,15 +149,16 @@ GLMotif::Popup* Visualizer::createScalarVariablesMenu(void)
 	scalarVariables->getValueChangedCallbacks().add(this,&Visualizer::changeScalarVariableCallback);
 	
 	scalarVariables->manageChild();
+        scalarVariablesMenu->manageMenu();
 	
-	return scalarVariablesMenuPopup;
+	return scalarVariablesMenu;
 	}
 
 GLMotif::Popup* Visualizer::createVectorVariablesMenu(void)
 	{
-	GLMotif::Popup* vectorVariablesMenuPopup=new GLMotif::Popup("VectorVariablesMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* vectorVariablesMenu=new GLMotif::PopupMenu("VectorVariablesMenuPopup",Vrui::getWidgetManager());
 	
-	GLMotif::RadioBox* vectorVariables=new GLMotif::RadioBox("VectorVariables",vectorVariablesMenuPopup,false);
+	GLMotif::RadioBox* vectorVariables=new GLMotif::RadioBox("VectorVariables",vectorVariablesMenu,false);
 	vectorVariables->setSelectionMode(GLMotif::RadioBox::ALWAYS_ONE);
 	
 	for(int i=0;i<variableManager->getNumVectorVariables();++i)
@@ -167,15 +168,16 @@ GLMotif::Popup* Visualizer::createVectorVariablesMenu(void)
 	vectorVariables->getValueChangedCallbacks().add(this,&Visualizer::changeVectorVariableCallback);
 	
 	vectorVariables->manageChild();
+        vectorVariablesMenu->manageMenu();
 	
-	return vectorVariablesMenuPopup;
+	return vectorVariablesMenu;
 	}
 
 GLMotif::Popup* Visualizer::createAlgorithmsMenu(void)
 	{
-	GLMotif::Popup* algorithmsMenuPopup=new GLMotif::Popup("AlgorithmsMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* algorithmsMenu=new GLMotif::PopupMenu("AlgorithmsMenuPopup",Vrui::getWidgetManager());
 	
-	GLMotif::RadioBox* algorithms=new GLMotif::RadioBox("Algorithms",algorithmsMenuPopup,false);
+	GLMotif::RadioBox* algorithms=new GLMotif::RadioBox("Algorithms",algorithmsMenu,false);
 	algorithms->setSelectionMode(GLMotif::RadioBox::ALWAYS_ONE);
 	
 	/* Add the cutting plane algorithm: */
@@ -217,16 +219,17 @@ GLMotif::Popup* Visualizer::createAlgorithmsMenu(void)
 	algorithms->getValueChangedCallbacks().add(this,&Visualizer::changeAlgorithmCallback);
 	
 	algorithms->manageChild();
+        algorithmsMenu->manageMenu();
 	
-	return algorithmsMenuPopup;
+	return algorithmsMenu;
 	}
 
 GLMotif::Popup* Visualizer::createElementsMenu(void)
 	{
-	GLMotif::Popup* elementsMenuPopup=new GLMotif::Popup("ElementsMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* elementsMenu=new GLMotif::PopupMenu("ElementsMenuPopup",Vrui::getWidgetManager());
 	
 	/* Create the elements menu: */
-	GLMotif::SubMenu* elementsMenu=new GLMotif::SubMenu("ElementsMenu",elementsMenuPopup,false);
+//	GLMotif::SubMenu* elementsMenu=new GLMotif::SubMenu("ElementsMenu",elementsMenuPopup,false);
 	
 	showElementListToggle=new GLMotif::ToggleButton("ShowElementListToggle",elementsMenu,"Show Element List");
 	showElementListToggle->getValueChangedCallbacks().add(this,&Visualizer::showElementListCallback);
@@ -242,9 +245,9 @@ GLMotif::Popup* Visualizer::createElementsMenu(void)
 	GLMotif::Button* clearElementsButton=new GLMotif::Button("ClearElementsButton",elementsMenu,"Clear Visualization Elements");
 	clearElementsButton->getSelectCallbacks().add(this,&Visualizer::clearElementsCallback);
 	
-	elementsMenu->manageChild();
+	elementsMenu->manageMenu();
 	
-	return elementsMenuPopup;
+	return elementsMenu;
 	}
 
 GLMotif::Popup* Visualizer::createStandardLuminancePalettesMenu(void)
@@ -293,10 +296,10 @@ GLMotif::Popup* Visualizer::createStandardSaturationPalettesMenu(void)
 
 GLMotif::Popup* Visualizer::createColorMenu(void)
 	{
-	GLMotif::Popup* colorMenuPopup=new GLMotif::Popup("ColorMenuPopup",Vrui::getWidgetManager());
+	GLMotif::PopupMenu* colorMenu=new GLMotif::PopupMenu("ColorMenuPopup",Vrui::getWidgetManager());
 	
 	/* Create the color menu and add entries for all standard palettes: */
-	GLMotif::SubMenu* colorMenu=new GLMotif::SubMenu("ColorMenu",colorMenuPopup,false);
+//	GLMotif::SubMenu* colorMenu=new GLMotif::SubMenu("ColorMenu",colorMenuPopup,false);
 	
 	GLMotif::CascadeButton* standardLuminancePalettesCascade=new GLMotif::CascadeButton("StandardLuminancePalettesCascade",colorMenu,"Create Luminance Palette");
 	standardLuminancePalettesCascade->setPopup(createStandardLuminancePalettesMenu());
@@ -313,17 +316,17 @@ GLMotif::Popup* Visualizer::createColorMenu(void)
 	showPaletteEditorToggle=new GLMotif::ToggleButton("ShowPaletteEditorToggle",colorMenu,"Show Palette Editor");
 	showPaletteEditorToggle->getValueChangedCallbacks().add(this,&Visualizer::showPaletteEditorCallback);
 	
-	colorMenu->manageChild();
+	colorMenu->manageMenu();
 	
-	return colorMenuPopup;
+	return colorMenu;
 	}
 
 GLMotif::PopupMenu* Visualizer::createMainMenu(void)
 	{
-	GLMotif::PopupMenu* mainMenuPopup=new GLMotif::PopupMenu("MainMenuPopup",Vrui::getWidgetManager());
-	mainMenuPopup->setTitle("3D Visualizer");
+	GLMotif::PopupMenu* mainMenu=new GLMotif::PopupMenu("MainMenuPopup",Vrui::getWidgetManager());
+	mainMenu->setTitle("3D Visualizer");
 	
-	GLMotif::Menu* mainMenu=new GLMotif::Menu("MainMenu",mainMenuPopup,false);
+//	GLMotif::Menu* mainMenu=new GLMotif::Menu("MainMenu",mainMenuPopup,false);
 	
 	GLMotif::CascadeButton* renderingModesCascade=new GLMotif::CascadeButton("RenderingModesCascade",mainMenu,"Rendering Modes");
 	renderingModesCascade->setPopup(createRenderingModesMenu());
@@ -360,9 +363,9 @@ GLMotif::PopupMenu* Visualizer::createMainMenu(void)
 		}
 	#endif
 	
-	mainMenu->manageChild();
+	mainMenu->manageMenu();
 	
-	return mainMenuPopup;
+	return mainMenu;
 	}
 
 void Visualizer::loadElements(const char* elementFileName,bool ascii)

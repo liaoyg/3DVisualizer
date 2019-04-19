@@ -103,6 +103,7 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::Vector3DLICRendererExtractor(
 	:Abstract::Algorithm(sVariableManager,sPipe)
 	{
 	/* Initialize parameters: */
+        parameters.vectorVariableIndex=sVariableManager->getCurrentVectorVariable()%sVariableManager->getNumVectorVariables();
 	for(int channel=0;channel<3;++channel)
 		parameters.scalarVariableIndices[channel]=(sVariableManager->getCurrentScalarVariable()+channel)%sVariableManager->getNumScalarVariables();
 	for(int channel=0;channel<3;++channel)

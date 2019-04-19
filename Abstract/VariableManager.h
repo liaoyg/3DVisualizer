@@ -102,6 +102,7 @@ class VariableManager:public GLObject
 	PaletteEditor* paletteEditor; // Editor for color maps
 	int numVectorVariables; // Total number of vector variables
 	VectorExtractor** vectorExtractors; // Array of extractors for the data set's vector variables
+        GLColorMap* colorMapLIC;
 	int currentScalarVariableIndex; // The index of the currently selected scalar variable
 	int currentVectorVariableIndex; // The index of the currently selected vector variable
 	
@@ -156,6 +157,7 @@ class VariableManager:public GLObject
 	const DataSet::VScalarRange& getScalarColorMapRange(int scalarVariableIndex); // Returns the value range of the given scalar variable that is mapped to the full extent of the color map
 	const VectorExtractor* getVectorExtractor(int vectorVariableIndex); // Returns a new vector extractor for the given vector variable
 	int getVectorVariable(const VectorExtractor* vectorExtractor) const; // Returns the index of the given vector extractor
+        const GLColorMap* getColorMapLIC(); // Return color map for vector lic rendering
 	const ScalarExtractor* getCurrentScalarExtractor(void) const // Returns the current scalar extractor
 		{
 		return scalarVariables[currentScalarVariableIndex].scalarExtractor;

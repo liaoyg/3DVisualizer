@@ -34,10 +34,9 @@ uniform vec3 licParams;  // lics steps forward, backward, lic step width
 
 uniform sampler3D volumeSampler;
 uniform sampler3D noiseSampler;
-uniform sampler1D licKernelSampler;
+uniform sampler2D licKernelSampler;
 
-uniform bool channelEnableds[3];
-uniform sampler1D colorMapSamplers[3];
+uniform sampler1D colorMapSampler;
 
 varying vec3 mcPosition;
 varying vec3 dcPosition;
@@ -50,21 +49,20 @@ float noiseLookup(in vec3 objPos, in float freqScale)
     return texture3D(noiseSampler, freqTexCoord).a;
 }
 
-float freqSampling(in vec3 pos, in sampler3D vectorVolume = volumeSampler)
+float freqSampling(in vec3 pos, in sampler3D vectorVolume)
 	{
 	//if (scalarData > minScalarRange && scalarData < maxScalarRange)
 	//if (vectorData.z > minScalarRange && vectorData.z < maxScalarRange)
 	if (true)
-	{
-
+		{
 		return noiseLookup(pos, gradient.z);
-	}
+		}
 	else
-		return 0;
-}
+		return 0.0;
+	}
 
-float singleLICstep(in out vec3 newPos, in out vec4 step, in float kernelOffset,
-                   in float dir, in sampler3D vectorVolume  = volumeSampler)
+float singleLICstep(inout vec3 newPos, inout vec4 step, in float kernelOffset,
+                   in float dir, in sampler3D vectorVolume)
 	{
     	float noise;
 
@@ -90,7 +88,7 @@ float singleLICstep(in out vec3 newPos, in out vec4 step, in float kernelOffset,
     	step = texture3D(vectorVolume, newPos);
 	noise = freqSampling(newPos, vectorVolume);
     	// determine weighting
-    	noise *= texture1D(licKernelSampler, kernelOffset).r;
+    	noise *= texture2D(licKernelSampler, vec2(kernelOffset,0)).r;
 
     	return noise;
 	}
@@ -108,28 +106,26 @@ vec4 computeLIC(in vec3 pos, in vec4 vec, in sampler3D vectorVolume)
 	float illum_back = 0.0;
 
 	// weight sample with lic kernel at position 0
-    	illum *= texture1D(licKernelSampler, 0.5).r;
+    	illum *= texture2D(licKernelSampler, vec2(0.5,0)).r;
 
-	float dir = -1;
+	float dir = -1.0;
     	// backward LIC
     	vec3 newPos = pos;
     	vec4 step = vec;
     	for (int i=0; i<int(licParams.y); ++i)
     		{
         	kernelOffset -= licKernel.y;
-        	illum_front += singleLICstep(newPos, level, step, kernelOffset, 
-logEyeDist, dir, ao, vectorVolume);
+        	illum_front += singleLICstep(newPos, step, kernelOffset, dir, vectorVolume);
     		}
     	// forward LIC
-	dir = 1;
+	dir = 1.0;
     	newPos = pos;
     	step = vec;
     	kernelOffset = 0.5;
     	for (int i=0; i<int(licParams.x); ++i)
     		{
         	kernelOffset += licKernel.x;
-        	illum_back += singleLICstep(newPos, level, step,kernelOffset, 
-logEyeDist, dir, ao, vectorVolume);
+        	illum_back += singleLICstep(newPos, step,kernelOffset, dir, vectorVolume);
     		}
     	return vec4(illum+illum_front+illum_back);
 	}
@@ -172,22 +168,23 @@ void main()
 		for(int i=0;i<1500;++i)
 			{
 			/* Get the volume data value at the current sample position: */
-			vec3 data=texture3D(volumeSampler,samplePos);
 			
-			/* Apply the three transfer functions: */
-			vec4 vol=vec4(0.0,0.0,0.0,0.0);
-			if(channelEnableds[0])
-				vol+=texture1D(colorMapSamplers[0],data.r);
-			if(channelEnableds[1])
-				vol+=texture1D(colorMapSamplers[1],data.g);
-			if(channelEnableds[2])
-				vol+=texture1D(colorMapSamplers[2],data.b);
+			//vec3 data=texture3D(volumeSampler,samplePos).xyz;
+			vec4 vec=texture3D(volumeSampler,samplePos);
+			if(vec.a > 0.01)
+				{
+				vec3 data = computeLIC(samplePos, vec, volumeSampler).xyz;	
+
+				/* Apply the three transfer functions: */
+				vec4 vol=vec4(0.0,0.0,0.0,0.0);
+				vol+=texture1D(colorMapSampler,data.r);
 			
-			/* Limit sample's opacity to [0.0, 1.0] range: */
-			vol.a=clamp(vol.a,0.0,1.0);
+				/* Limit sample's opacity to [0.0, 1.0] range: */
+				vol.a=clamp(vol.a,0.0,1.0);
 			
-			/* Accumulate color and opacity: */
-			accum+=vol*(1.0-accum.a);
+				/* Accumulate color and opacity: */
+				accum+=vol*(1.0-accum.a);
+				}
 			
 			/* Bail out when opacity hits 1.0: */
 			if(accum.a>=1.0-1.0/256.0||lambda>=lambdaMax)

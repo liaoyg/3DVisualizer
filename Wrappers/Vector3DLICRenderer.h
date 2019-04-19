@@ -47,7 +47,10 @@ class Vector3DLICRenderer:public Visualization::Abstract::Element
 	typedef typename DataSetWrapper::DS DS; // Type of templatized data set
 	typedef typename DS::Scalar Scalar; // Scalar type of data set's domain
 	typedef typename DataSetWrapper::SE SE; // Type of templatized scalar extractor
+	typedef typename DataSetWrapper::VE VE; // Type of templatized vector extractor
 	typedef typename DataSetWrapper::ScalarExtractor ScalarExtractor; // Compatible scalar extractor wrapper class
+	typedef typename DataSetWrapper::VectorExtractor VectorExtractor; // Compatible scalar extractor wrapper class
+        
 	
 	/* Elements: */
 	private:

@@ -280,7 +280,8 @@ ifneq ($(USE_SHADERS),0)
                         Polyhedron.cpp \
                         Raycaster.cpp \
                         SingleChannelRaycaster.cpp \
-                        TripleChannelRaycaster.cpp
+                        TripleChannelRaycaster.cpp \
+			LICRaycaster.cpp
 else
   VISUALIZER_SOURCES += VolumeRenderer.cpp \
                         PaletteRenderer.cpp
@@ -294,12 +295,15 @@ endif
 SHADERS = SingleChannelRaycaster.vs \
           SingleChannelRaycaster.fs \
           TripleChannelRaycaster.vs \
-          TripleChannelRaycaster.fs
+          TripleChannelRaycaster.fs \
+          LICRaycaster.vs \
+	  LICRaycaster.fs
 
 # Per-source compiler flags:
 $(OBJDIR)/Concrete/EarthRenderer.o: CFLAGS += -DEARTHRENDERER_IMAGEDIR='"$(SHAREINSTALLDIR)"'
 $(OBJDIR)/SingleChannelRaycaster.o: CFLAGS += -DVISUALIZER_SHADERDIR='"$(SHAREINSTALLDIR)/Shaders"'
 $(OBJDIR)/TripleChannelRaycaster.o: CFLAGS += -DVISUALIZER_SHADERDIR='"$(SHAREINSTALLDIR)/Shaders"'
+$(OBJDIR)/LICRaycaster.o: CFLAGS += -DVISUALIZER_SHADERDIR='"$(SHAREINSTALLDIR)/Shaders"' -DVISUALIZER_SHAREDIR='"$(SHAREINSTALLDIR)"'
 $(OBJDIR)/Visualizer.o: CFLAGS += -DVISUALIZER_MODULENAMETEMPLATE='"$(PLUGININSTALLDIR)/lib%s.$(PLUGINFILEEXT)"'
 
 #

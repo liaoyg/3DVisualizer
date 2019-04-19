@@ -93,6 +93,98 @@ VolumeRenderingSampler<Cartesian<ScalarParam,3,ValueParam> >::sample(
 		}
 	}
 
+template <class ScalarParam,class ValueParam>
+template <class ScalarExtractorParam,class VoxelParam>
+inline
+void
+VolumeRenderingSampler<Cartesian<ScalarParam,3,ValueParam> >::sampleDirect(
+	const ScalarExtractorParam& scalarExtractor,
+	typename ScalarExtractorParam::Scalar outOfDomainValue,
+	VoxelParam* voxels,
+	const ptrdiff_t voxelStrides[3],
+	Cluster::MulticastPipe* pipe,
+	float percentageScale,
+	float percentageOffset,
+	Visualization::Abstract::Algorithm* algorithm) const
+	{
+	typedef VoxelParam Voxel;
+	typedef typename ScalarExtractorParam::Scalar VScalar;
+	
+	/* Calculate the sample conversion factors: */
+//	VScalar sampleFactor=VScalar(255)/(maxValue-minValue);
+//	VScalar sampleOffset=VScalar(0.5)-minValue*VScalar(255)/(maxValue-minValue);
+	
+	typename DataSet::Index index;
+	Voxel* vPtr0=voxels;
+	for(index[0]=0;index[0]<dataSet.getNumVertices()[0];++index[0],vPtr0+=voxelStrides[0])
+		{
+		Voxel* vPtr1=vPtr0;
+		for(index[1]=0;index[1]<dataSet.getNumVertices()[1];++index[1],vPtr1+=voxelStrides[1])
+			{
+			Voxel* vPtr2=vPtr1;
+			for(index[2]=0;index[2]<dataSet.getNumVertices()[2];++index[2],vPtr2+=voxelStrides[2])
+				{
+				/* Get the vertex' scalar value: */
+				VScalar value=scalarExtractor.getValue(dataSet.getVertexValue(index));
+				
+				/* Convert the value to unsigned char: */
+				*vPtr2=Voxel(value);
+				}
+			}
+		
+		/* Update the busy dialog: */
+		algorithm->callBusyFunction(float(index[0]+1)*percentageScale/float(dataSet.getNumVertices()[0])+percentageOffset);
+		}
+	}
+
+template <class ScalarParam,class ValueParam>
+template <class VectorExtractorParam,class VoxelParam>
+inline
+void
+VolumeRenderingSampler<Cartesian<ScalarParam,3,ValueParam> >::sampleVec(
+	const VectorExtractorParam& vectorExtractor,
+	VoxelParam* voxels,
+	const ptrdiff_t voxelStrides[3],
+	Cluster::MulticastPipe* pipe,
+	float percentageScale,
+	float percentageOffset,
+	Visualization::Abstract::Algorithm* algorithm) const
+	{
+	typedef VoxelParam Voxel;
+	typedef typename VectorExtractorParam::Vector Vector;
+	
+	/* Calculate the sample conversion factors: */
+//	VScalar sampleFactor=VScalar(255)/(maxValue-minValue);
+//	VScalar sampleOffset=VScalar(0.5)-minValue*VScalar(255)/(maxValue-minValue);
+	
+	typename DataSet::Index index;
+	Voxel* vPtr0=voxels;
+	for(index[0]=0;index[0]<dataSet.getNumVertices()[0];++index[0],vPtr0+=voxelStrides[0])
+		{
+		Voxel* vPtr1=vPtr0;
+		for(index[1]=0;index[1]<dataSet.getNumVertices()[1];++index[1],vPtr1+=voxelStrides[1])
+			{
+			Voxel* vPtr2=vPtr1;
+			for(index[2]=0;index[2]<dataSet.getNumVertices()[2];++index[2],vPtr2+=voxelStrides[2])
+				{
+				/* Get the vertex' scalar value: */
+				Vector value=vectorExtractor.getValue(dataSet.getVertexValue(index));
+                                double len = Math::sqrt(Math::sqr(value[0]) + Math::sqr(value[1]) + Math::sqr(value[2]));
+                                for(int i = 0; i < 3; ++i)
+                                    {
+                                    if(len < 0.00001)
+                                            vPtr2[i] = Voxel(0.0);
+                                    else
+                                            vPtr2[i]=Voxel(value[i]);
+                                    }
+				}
+			}
+		
+		/* Update the busy dialog: */
+		algorithm->callBusyFunction(float(index[0]+1)*percentageScale/float(dataSet.getNumVertices()[0])+percentageOffset);
+		}
+	}
+
 /********************************************************
 Methods of class VolumeRenderingSampler<SlicedCartesian>:
 ********************************************************/
@@ -147,6 +239,100 @@ VolumeRenderingSampler<SlicedCartesian<ScalarParam,3,ValueScalarParam> >::sample
 				
 				/* Convert the value to unsigned char: */
 				*vPtr2=Voxel(value*sampleFactor+sampleOffset);
+				}
+			}
+		
+		/* Update the busy dialog: */
+		algorithm->callBusyFunction(float(index[0]+1)*percentageScale/float(dataSet.getNumVertices()[0])+percentageOffset);
+		}
+	}
+
+template <class ScalarParam,class ValueScalarParam>
+template <class ScalarExtractorParam,class VoxelParam>
+inline
+void
+VolumeRenderingSampler<SlicedCartesian<ScalarParam,3,ValueScalarParam> >::sampleDirect(
+	const ScalarExtractorParam& scalarExtractor,
+	typename ScalarExtractorParam::Scalar outOfDomainValue,
+	VoxelParam* voxels,
+	const ptrdiff_t voxelStrides[3],
+	Cluster::MulticastPipe* pipe,
+	float percentageScale,
+	float percentageOffset,
+	Visualization::Abstract::Algorithm* algorithm) const
+	{
+	typedef VoxelParam Voxel;
+	typedef typename ScalarExtractorParam::Scalar VScalar;
+	
+	/* Calculate the sample conversion factors: */
+//	VScalar sampleFactor=VScalar(255)/(maxValue-minValue);
+//	VScalar sampleOffset=VScalar(0.5)-minValue*VScalar(255)/(maxValue-minValue);
+	
+	typename DataSet::Index index;
+	Voxel* vPtr0=voxels;
+	ptrdiff_t linearIndex=0;
+	for(index[0]=0;index[0]<dataSet.getNumVertices()[0];++index[0],vPtr0+=voxelStrides[0])
+		{
+		Voxel* vPtr1=vPtr0;
+		for(index[1]=0;index[1]<dataSet.getNumVertices()[1];++index[1],vPtr1+=voxelStrides[1])
+			{
+			Voxel* vPtr2=vPtr1;
+			for(index[2]=0;index[2]<dataSet.getNumVertices()[2];++index[2],vPtr2+=voxelStrides[2],++linearIndex)
+				{
+				/* Get the vertex' scalar value: */
+				VScalar value=scalarExtractor.getValue(linearIndex);
+				
+				/* Convert the value to unsigned char: */
+				*vPtr2=Voxel(value);
+				}
+			}
+		
+		/* Update the busy dialog: */
+		algorithm->callBusyFunction(float(index[0]+1)*percentageScale/float(dataSet.getNumVertices()[0])+percentageOffset);
+		}
+	}
+
+template <class ScalarParam,class ValueScalarParam>
+template <class VectorExtractorParam,class VoxelParam>
+inline
+void
+VolumeRenderingSampler<SlicedCartesian<ScalarParam,3,ValueScalarParam> >::sampleVec(
+	const VectorExtractorParam& vectorExtractor,
+	VoxelParam* voxels,
+	const ptrdiff_t voxelStrides[3],
+	Cluster::MulticastPipe* pipe,
+	float percentageScale,
+	float percentageOffset,
+	Visualization::Abstract::Algorithm* algorithm) const
+	{
+	typedef VoxelParam Voxel;
+	typedef typename VectorExtractorParam::Vector Vector;
+	
+	/* Calculate the sample conversion factors: */
+//	VScalar sampleFactor=VScalar(255)/(maxValue-minValue);
+//	VScalar sampleOffset=VScalar(0.5)-minValue*VScalar(255)/(maxValue-minValue);
+	
+	typename DataSet::Index index;
+	Voxel* vPtr0=voxels;
+	ptrdiff_t linearIndex=0;
+	for(index[0]=0;index[0]<dataSet.getNumVertices()[0];++index[0],vPtr0+=voxelStrides[0])
+		{
+		Voxel* vPtr1=vPtr0;
+		for(index[1]=0;index[1]<dataSet.getNumVertices()[1];++index[1],vPtr1+=voxelStrides[1])
+			{
+			Voxel* vPtr2=vPtr1;
+			for(index[2]=0;index[2]<dataSet.getNumVertices()[2];++index[2],vPtr2+=voxelStrides[2],++linearIndex)
+				{
+				/* Get the vertex' scalar value: */
+				Vector value=vectorExtractor.getValue(linearIndex);
+				double len = Math::sqrt(Math::sqr(value[0]) + Math::sqr(value[1]) + Math::sqr(value[2]));
+                                for(int i = 0; i < 3; ++i)
+                                    {
+                                    if(len < 0.00001)
+                                            vPtr2[i] = Voxel(0.0);
+                                    else
+                                            vPtr2[i]=Voxel(value[i]);
+                                    }
 				}
 			}
 		

@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Wrappers/Vector3DLICRenderer.h>
 
 #include <stdio.h>
+#include <iostream>
 #include <Misc/ThrowStdErr.h>
 #include <GLMotif/StyleSheet.h>
 #include <GLMotif/WidgetManager.h>
@@ -74,10 +75,10 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 	
 	/* Check if all three scalar channels are from the same data set: */
 	Visualization::Abstract::VariableManager* variableManager=algorithm->getVariableManager();
-	const Visualization::Abstract::DataSet* dataSet=variableManager->getDataSetByScalarVariable(myParameters->scalarVariableIndices[0]);
-	for(int channel=1;channel<3;++channel)
-		if(variableManager->getDataSetByScalarVariable(myParameters->scalarVariableIndices[channel])!=dataSet)
-			Misc::throwStdErr("Vector3DLICRenderer: Mismatching scalar variables");
+	const Visualization::Abstract::DataSet* dataSet=variableManager->getDataSetByVectorVariable(myParameters->vectorVariableIndex);
+//	for(int channel=1;channel<3;++channel)
+//		if(variableManager->getDataSetByScalarVariable(myParameters->scalarVariableIndices[channel])!=dataSet)
+//			Misc::throwStdErr("Vector3DLICRenderer: Mismatching scalar variables");
 	
 	/* Get a reference to the templatized data set: */
 	const DataSetWrapper* myDataSet=dynamic_cast<const DataSetWrapper*>(dataSet);
@@ -92,27 +93,37 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 	raycaster=new LICRaycaster(sampler.getSamplerSize(),ds.getDomainBox());
 	
 	/* Sample the three scalar channels: */
-	for(int channel=0;channel<3;++channel)
-		{
-		/* Get a scalar extractor for the channel: */
-		int svi=myParameters->scalarVariableIndices[channel];
-		const ScalarExtractor* myScalarExtractor=dynamic_cast<const ScalarExtractor*>(variableManager->getScalarExtractor(svi));
-		if(myScalarExtractor==0)
-			Misc::throwStdErr("Vector3DLICRenderer: Mismatching scalar extractor type");
-		const SE& se=myScalarExtractor->getSe();
-		
-		/* Get the scalar value range: */
-		typename SE::Scalar minValue=typename SE::Scalar(variableManager->getScalarValueRange(svi).first);
-		typename SE::Scalar maxValue=typename SE::Scalar(variableManager->getScalarValueRange(svi).second);
-		
-		/* Sample the channel: */
-		sampler.sample(se,minValue,maxValue,minValue,raycaster->getData(channel),raycaster->getDataStrides(),algorithm->getPipe(),100.0f/3.0f,100.0f*float(channel)/3.0f,algorithm);
-		
-		/* Set the channel's parameters: */
-		raycaster->setChannelEnabled(channel,myParameters->channelEnableds[channel]);
-		raycaster->setColorMap(channel,variableManager->getColorMap(svi));
-		raycaster->setTransparencyGamma(channel,myParameters->transparencyGammas[channel]);
-		}
+
+        /* Get a scalar extractor for the channel: */
+        int vvi=myParameters->vectorVariableIndex;
+//        const ScalarExtractor* myScalarExtractor=dynamic_cast<const ScalarExtractor*>(variableManager->getScalarExtractor(svi));
+        const VectorExtractor* myVectorExtractor=dynamic_cast<const VectorExtractor*>(variableManager->getVectorExtractor(vvi));
+//        if(myScalarExtractor==0)
+//                Misc::throwStdErr("Vector3DLICRenderer: Mismatching scalar extractor type");
+        if(myVectorExtractor==0)
+                Misc::throwStdErr("Vector3DLICRenderer: Mismatching vector extractor type");
+//        const SE& se=myScalarExtractor->getSe();
+        const VE& ve=myVectorExtractor->getVe();
+
+        /* Get the scalar value range: */
+//        typename SE::Scalar minValue=typename SE::Scalar(variableManager->getScalarValueRange(svi).first);
+//        typename SE::Scalar maxValue=typename SE::Scalar(variableManager->getScalarValueRange(svi).second);
+
+        std::cout << "scalar: " << variableManager->getVectorVariableName(vvi) <<" index: " << vvi << std::endl;
+//        std::cout << "min: " << minValue << " max: " <<maxValue <<std::endl;
+        const ptrdiff_t* strides = raycaster->getDataStrides();
+        std::cout << "strides: " << strides[0] << " " << strides[1] << " " << strides[2] <<std::endl;
+        /* Sample the channel: */
+//		sampler.sampleDirect(se,minValue,raycaster->getData(channel),raycaster->getDataStrides(),algorithm->getPipe(),100.0f/3.0f,100.0f*float(channel)/3.0f,algorithm);
+        sampler.sampleVec(ve,raycaster->getData(0),raycaster->getDataStrides(),algorithm->getPipe(),100.0f,0.0f,algorithm);
+        raycaster->setColorMap(variableManager->getColorMapLIC());
+        for(int channel=0;channel<3;++channel)
+                {
+                /* Set the channel's parameters: */
+//                raycaster->setChannelEnabled(channel,myParameters->channelEnableds[channel]);
+                raycaster->setTransparencyGamma(channel,myParameters->transparencyGammas[channel]);
+                }
+                
 	raycaster->updateData();
 	
 	/* Set the raycaster's step size: */
@@ -162,7 +173,7 @@ Vector3DLICRenderer<DataSetWrapperParam>::createSettingsDialog(
 		snprintf(label,sizeof(label),"Channel %d",channel+1);
 		channelEnabledToggles[channel]=new GLMotif::ToggleButton(name,settingsDialog,label);
 		channelEnabledToggles[channel]->setToggleType(GLMotif::ToggleButton::TOGGLE_BUTTON);
-		channelEnabledToggles[channel]->setToggle(raycaster->getChannelEnabled(channel));
+//		channelEnabledToggles[channel]->setToggle(raycaster->getChannelEnabled(channel));
 		channelEnabledToggles[channel]->getValueChangedCallbacks().add(this,&Vector3DLICRenderer::channelEnabledCallback);
 		
 		/* Create a slider to change the transparency gamma factor: */
@@ -241,7 +252,7 @@ Vector3DLICRenderer<DataSetWrapperParam>::channelEnabledCallback(
 		if(cbData->toggle==channelEnabledToggles[channel])
 			{
 			/* Enable or disable the channel: */
-			raycaster->setChannelEnabled(channel,cbData->set);
+//			raycaster->setChannelEnabled(channel,cbData->set);
 			}
 	}
 
