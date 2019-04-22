@@ -95,18 +95,28 @@ void VariableManager::prepareScalarVariable(int scalarVariableIndex)
 	{
 	ScalarVariable& sv=scalarVariables[scalarVariableIndex];
 	
-	/* Get a new scalar extractor: */
-	sv.scalarExtractor=dataSet->getScalarExtractor(scalarVariableIndex);
-	
-	/* Calculate the scalar extractor's value range: */
-	sv.valueRange=dataSet->calcScalarValueRange(sv.scalarExtractor);
-	
-	/* Check for and correct an empty value range: */
-	if(sv.valueRange.first==sv.valueRange.second)
-		{
-		sv.valueRange.first-=1.0;
-		sv.valueRange.second+=1.0;
-		}
+        if(scalarVariableIndex < numScalarVariables)
+                {
+                /* Get a new scalar extractor: */
+                sv.scalarExtractor=dataSet->getScalarExtractor(scalarVariableIndex);
+
+                /* Calculate the scalar extractor's value range: */
+                sv.valueRange=dataSet->calcScalarValueRange(sv.scalarExtractor);
+
+                /* Check for and correct an empty value range: */
+                if(sv.valueRange.first==sv.valueRange.second)
+                        {
+                        sv.valueRange.first-=1.0;
+                        sv.valueRange.second+=1.0;
+                        }
+                }
+        else
+                {
+                if(sv.colorMapVersion > 0)
+                        return;
+                sv.valueRange.first=0.0;
+                sv.valueRange.second=1.0;  
+                }
 	
 	/* Create a 256-entry OpenGL color map for rendering: */
 	sv.colorMap=new GLColorMap(GLColorMap::GREYSCALE|GLColorMap::RAMP_ALPHA,1.0f,1.0f,sv.valueRange.first,sv.valueRange.second);
@@ -161,7 +171,7 @@ VariableManager::VariableManager(const DataSet* sDataSet,const char* sDefaultCol
 	/* Initialize the scalar variable array: */
 	numScalarVariables=dataSet->getNumScalarVariables();
 	if(numScalarVariables>0)
-		scalarVariables=new ScalarVariable[numScalarVariables];
+		scalarVariables=new ScalarVariable[numScalarVariables+1];
 	
 	/* Get the style sheet: */
 	const GLMotif::StyleSheet& ss=*Vrui::getWidgetManager()->getStyleSheet();
@@ -235,7 +245,8 @@ int VariableManager::getScalarVariable(const char* scalarVariableName) const
 	for(int i=0;i<numScalarVariables;++i)
 		if(strcmp(getScalarVariableName(i),scalarVariableName)==0)
 			return i;
-	
+        if(strcmp("LIC",scalarVariableName)==0)
+            return numScalarVariables;
 	return -1;
 	}
 
@@ -250,7 +261,7 @@ int VariableManager::getVectorVariable(const char* vectorVariableName) const
 
 void VariableManager::setCurrentScalarVariable(int newCurrentScalarVariableIndex)
 	{
-	if(currentScalarVariableIndex==newCurrentScalarVariableIndex||newCurrentScalarVariableIndex<0||newCurrentScalarVariableIndex>=numScalarVariables)
+	if(currentScalarVariableIndex==newCurrentScalarVariableIndex||newCurrentScalarVariableIndex<0||newCurrentScalarVariableIndex>numScalarVariables)
 		return;
 	
 	/* Check if the scalar variable has not been requested before: */
@@ -296,11 +307,17 @@ void VariableManager::setCurrentScalarVariable(int newCurrentScalarVariableIndex
 	
 	/* Update the palette editor's title: */
 	char title[256];
-	snprintf(title,sizeof(title),"Palette Editor - %s",dataSet->getScalarVariableName(newCurrentScalarVariableIndex));
+        if(newCurrentScalarVariableIndex<numScalarVariables)
+            snprintf(title,sizeof(title),"Palette Editor - %s",dataSet->getScalarVariableName(newCurrentScalarVariableIndex));
+        else
+            snprintf(title,sizeof(title),"Palette Editor - LIC");
 	paletteEditor->setTitleString(title);
 
 	/* Update the color bar dialog: */
-	snprintf(title,sizeof(title),"Color Bar - %s",dataSet->getScalarVariableName(newCurrentScalarVariableIndex));
+        if(newCurrentScalarVariableIndex<numScalarVariables)
+            snprintf(title,sizeof(title),"Color Bar - %s",dataSet->getScalarVariableName(newCurrentScalarVariableIndex));
+        else
+            snprintf(title,sizeof(title),"Color Bar - LIC");
 	colorBarDialogPopup->setTitleString(title);
 	colorBar->setColorMap(sv.colorMap);
 	colorBar->setValueRange(sv.valueRange.first,sv.valueRange.second);
@@ -343,7 +360,7 @@ int VariableManager::getScalarVariable(const ScalarExtractor* scalarExtractor) c
 
 const DataSet::VScalarRange& VariableManager::getScalarValueRange(int scalarVariableIndex)
 	{
-	if(scalarVariableIndex<0||scalarVariableIndex>=numScalarVariables)
+	if(scalarVariableIndex<0||scalarVariableIndex>numScalarVariables)
 		return scalarVariables[currentScalarVariableIndex].valueRange;
 	
 	/* Check if the scalar variable has not been requested before: */
@@ -355,9 +372,9 @@ const DataSet::VScalarRange& VariableManager::getScalarValueRange(int scalarVari
 
 const GLColorMap* VariableManager::getColorMap(int scalarVariableIndex)
 	{
-	if(scalarVariableIndex<0||scalarVariableIndex>=numScalarVariables)
+	if(scalarVariableIndex<0||scalarVariableIndex>numScalarVariables)
 		return 0;
-	
+        
 	/* Check if the scalar variable has not been requested before: */
 	if(scalarVariables[scalarVariableIndex].scalarExtractor==0)
 		prepareScalarVariable(scalarVariableIndex);
@@ -367,7 +384,7 @@ const GLColorMap* VariableManager::getColorMap(int scalarVariableIndex)
 
 const DataSet::VScalarRange& VariableManager::getScalarColorMapRange(int scalarVariableIndex)
 	{
-	if(scalarVariableIndex<0||scalarVariableIndex>=numScalarVariables)
+	if(scalarVariableIndex<0||scalarVariableIndex>numScalarVariables)
 		return scalarVariables[currentScalarVariableIndex].colorMapRange;
 	
 	/* Check if the scalar variable has not been requested before: */
@@ -401,9 +418,9 @@ int VariableManager::getVectorVariable(const VectorExtractor* vectorExtractor) c
 
 const GLColorMap* VariableManager::getColorMapLIC()
         {
-        if(colorMapLIC==0)
-            colorMapLIC=new GLColorMap(GLColorMap::GREYSCALE|GLColorMap::RAMP_ALPHA,1.0f,1.0f,-12.0f,16.0f);
-        return colorMapLIC;
+        if(scalarVariables[numScalarVariables].colorMap==0)
+            scalarVariables[numScalarVariables].colorMap=new GLColorMap(GLColorMap::GREYSCALE|GLColorMap::RAMP_ALPHA,1.0f,1.0f,-12.0f,16.0f);
+        return scalarVariables[numScalarVariables].colorMap;
         }
 
 void VariableManager::showColorBar(bool show)

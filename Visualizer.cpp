@@ -144,6 +144,8 @@ GLMotif::Popup* Visualizer::createScalarVariablesMenu(void)
 	
 	for(int i=0;i<variableManager->getNumScalarVariables();++i)
 		scalarVariables->addToggle(variableManager->getScalarVariableName(i));
+        // Add one scalar as LIC intensity
+        scalarVariables->addToggle("LIC");
 	
 	scalarVariables->setSelectedToggle(variableManager->getCurrentScalarVariable());
 	scalarVariables->getValueChangedCallbacks().add(this,&Visualizer::changeScalarVariableCallback);

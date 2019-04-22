@@ -59,13 +59,13 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::Parameters::write(
 	Visualization::Abstract::ParametersSink& sink) const
 	{
 	/* Write all parameters: */
-	sink.writeScalarVariable("scalarVariable0",scalarVariableIndices[0]);
-	sink.writeScalarVariable("scalarVariable1",scalarVariableIndices[1]);
-	sink.writeScalarVariable("scalarVariable2",scalarVariableIndices[2]);
-	sink.write("outOfDomainValues",Visualization::Abstract::ArrayWriter<VScalar>(outOfDomainValues,3));
 	sink.write("sliceFactor",Visualization::Abstract::Writer<Scalar>(sliceFactor));
-	sink.write("channelEnableds",Visualization::Abstract::ArrayWriter<bool>(channelEnableds,3));
-	sink.write("transparencyGammas",Visualization::Abstract::ArrayWriter<float>(transparencyGammas,3));
+	sink.write("licStepSize",Visualization::Abstract::Writer<Scalar>(licStepSize));
+	sink.writeScalarVariable("fowardIteration",fowardIteration);
+        sink.writeScalarVariable("backwardIteration",backwardIteration);
+	sink.write("noiseFrequency",Visualization::Abstract::Writer<Scalar>(noiseFrequency));
+	sink.write("illuminScale",Visualization::Abstract::Writer<Scalar>(illuminScale));
+	sink.write("transparencyGamma",Visualization::Abstract::Writer<float>(transparencyGamma));
 	}
 
 template <class DataSetWrapperParam>
@@ -75,13 +75,13 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::Parameters::read(
 	Visualization::Abstract::ParametersSource& source)
 	{
 	/* Read all parameters: */
-	source.readScalarVariable("scalarVariable0",scalarVariableIndices[0]);
-	source.readScalarVariable("scalarVariable1",scalarVariableIndices[1]);
-	source.readScalarVariable("scalarVariable2",scalarVariableIndices[2]);
-	source.read("outOfDomainValues",Visualization::Abstract::ArrayReader<VScalar>(outOfDomainValues,3));
 	source.read("sliceFactor",Visualization::Abstract::Reader<Scalar>(sliceFactor));
-	source.read("channelEnableds",Visualization::Abstract::ArrayReader<bool>(channelEnableds,3));
-	source.read("transparencyGammas",Visualization::Abstract::ArrayReader<float>(transparencyGammas,3));
+        source.read("licStepSize",Visualization::Abstract::Reader<Scalar>(licStepSize));
+	source.readScalarVariable("fowardIteration",fowardIteration);
+	source.readScalarVariable("backwardIteration",backwardIteration);
+        source.read("noiseFrequency",Visualization::Abstract::Reader<Scalar>(noiseFrequency));
+        source.read("illuminScale",Visualization::Abstract::Reader<Scalar>(illuminScale));
+	source.read("transparencyGammas",Visualization::Abstract::Reader<float>(transparencyGamma));
 	}
 
 /*************************************************************
@@ -104,23 +104,15 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::Vector3DLICRendererExtractor(
 	{
 	/* Initialize parameters: */
         parameters.vectorVariableIndex=sVariableManager->getCurrentVectorVariable()%sVariableManager->getNumVectorVariables();
-	for(int channel=0;channel<3;++channel)
-		parameters.scalarVariableIndices[channel]=(sVariableManager->getCurrentScalarVariable()+channel)%sVariableManager->getNumScalarVariables();
-	for(int channel=0;channel<3;++channel)
-		parameters.outOfDomainValues[channel]=sVariableManager->getScalarValueRange(parameters.scalarVariableIndices[channel]).first;
 	parameters.sliceFactor=Scalar(1);
-	for(int channel=0;channel<3;++channel)
-		{
-		parameters.channelEnableds[channel]=true;
-		parameters.transparencyGammas[channel]=1.0f;
-		}
-	
-	/* Initialize the UI components: */
-	for(int channel=0;channel<3;++channel)
-		{
-		scalarVariableBoxes[channel]=0;
-		outOfDomainValueSliders[channel]=0;
-		}
+        parameters.licStepSize = Scalar(0.5);
+        parameters.fowardIteration = 32;
+        parameters.backwardIteration = 32;
+        parameters.noiseFrequency = Scalar(5.0);
+        parameters.illuminScale = Scalar(1.0);
+        parameters.transparencyGamma=1.0f;
+
+        LICStepSizeValueSlider = 0;
 	}
 
 template <class DataSetWrapperParam>
@@ -146,40 +138,15 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::createSettingsDialog(
 	GLMotif::RowColumn* settingsDialog=new GLMotif::RowColumn("SettingsDialog",settingsDialogPopup,false);
 	settingsDialog->setNumMinorWidgets(2);
 	
-	std::vector<std::string> scalarVariables;
-	for(int i=0;i<getVariableManager()->getNumScalarVariables();++i)
-		scalarVariables.push_back(getVariableManager()->getScalarVariableName(i));
-	for(int channel=0;channel<3;++channel)
-		{
-		/* Create a label for the volume renderer channel: */
-		char name[40],label[20];
-		snprintf(name,sizeof(name),"ScalarVariableLabel%d",channel);
-		snprintf(label,sizeof(label),"Scalar Channel %d",channel+1);
-		new GLMotif::Label(name,settingsDialog,label);
-		
-		snprintf(name,sizeof(name),"ScalarVariableMargin%d",channel);
-		GLMotif::Margin* scalarVariableMargin=new GLMotif::Margin(name,settingsDialog,false);
-		scalarVariableMargin->setAlignment(GLMotif::Alignment::LEFT);
-		
-		/* Create a drop-down box to select the variable for the volume renderer channel: */
-		snprintf(name,sizeof(name),"ScalarVariableBox%d",channel);
-		scalarVariableBoxes[channel]=new GLMotif::DropdownBox(name,scalarVariableMargin,scalarVariables);
-		scalarVariableBoxes[channel]->setSelectedItem(parameters.scalarVariableIndices[channel]);
-		scalarVariableBoxes[channel]->getValueChangedCallbacks().add(this,&Vector3DLICRendererExtractor::scalarVariableBoxCallback);
-		
-		scalarVariableMargin->manageChild();
-		
-		new GLMotif::Blind("Blind1",settingsDialog);
-		
-		/* Create a slider to select the channel's out-of-domain value: */
-		snprintf(name,sizeof(name),"OutOfDomainValueSlider%d",channel);
-		outOfDomainValueSliders[channel]=new GLMotif::TextFieldSlider(name,settingsDialog,12,ss->fontHeight*20.0f);
-		outOfDomainValueSliders[channel]->setSliderMapping(GLMotif::TextFieldSlider::LINEAR);
-		const Abstract::DataSet::VScalarRange& scalarRange=getVariableManager()->getScalarValueRange(parameters.scalarVariableIndices[channel]);
-		outOfDomainValueSliders[channel]->setValueRange(scalarRange.first,scalarRange.second,0.0);
-		outOfDomainValueSliders[channel]->setValue(parameters.outOfDomainValues[channel]);
-		outOfDomainValueSliders[channel]->getValueChangedCallbacks().add(this,&Vector3DLICRendererExtractor::outOfDomainValueCallback);
-		}
+        new GLMotif::Label("LICStepSizeLabel",settingsDialog,"LIC Stepsize");
+        GLMotif::Margin* scalarVariableMargin=new GLMotif::Margin("LICStepSizeMargin",settingsDialog,false);
+	scalarVariableMargin->setAlignment(GLMotif::Alignment::LEFT);
+        
+        LICStepSizeValueSlider=new GLMotif::TextFieldSlider("LICStepSizeValueSlider",settingsDialog,12,ss->fontHeight*20.0f);
+        LICStepSizeValueSlider->setSliderMapping(GLMotif::TextFieldSlider::LINEAR);
+        LICStepSizeValueSlider->setValueRange(0.0f,2.0f, 0.0f);
+        LICStepSizeValueSlider->setValue(parameters.licStepSize);
+        LICStepSizeValueSlider->getValueChangedCallbacks().add(this,&Vector3DLICRendererExtractor::LICStepSizeValueCallback);
 	
 	settingsDialog->manageChild();
 	
@@ -196,13 +163,7 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::readParameters(
 	parameters.read(source);
 	
 	/* Update the GUI: */
-	for(int channel=0;channel<3;++channel)
-		{
-		if(scalarVariableBoxes[channel]!=0)
-			scalarVariableBoxes[channel]->setSelectedItem(parameters.scalarVariableIndices[channel]);
-		if(outOfDomainValueSliders[channel]!=0)
-			outOfDomainValueSliders[channel]->setValue(parameters.outOfDomainValues[channel]);
-		}
+//        LICStepSizeValueSlider->setValue(raycaster->);
 	}
 
 template <class DataSetWrapperParam>
@@ -231,43 +192,13 @@ Vector3DLICRendererExtractor<DataSetWrapperParam>::startSlaveElement(
 template <class DataSetWrapperParam>
 inline
 void
-Vector3DLICRendererExtractor<DataSetWrapperParam>::scalarVariableBoxCallback(
-	GLMotif::DropdownBox::ValueChangedCallbackData* cbData)
-	{
-	/* Find the index of the dropdown box: */
-	int channel;
-	for(channel=0;channel<3&&scalarVariableBoxes[channel]!=cbData->dropdownBox;++channel)
-		;
-	if(channel<3)
-		{
-		/* Get the new selected item: */
-		parameters.scalarVariableIndices[channel]=cbData->newSelectedItem;
-		
-		/* Update the channel's out-of-domain value: */
-		const Abstract::DataSet::VScalarRange& scalarRange=getVariableManager()->getScalarValueRange(parameters.scalarVariableIndices[channel]);
-		parameters.outOfDomainValues[channel]=scalarRange.first;
-		
-		/* Update the corresponding out-of-domain value slider: */
-		outOfDomainValueSliders[channel]->setValueRange(scalarRange.first,scalarRange.second,0.0);
-		outOfDomainValueSliders[channel]->setValue(parameters.outOfDomainValues[channel]);
-		}
-	}
-
-template <class DataSetWrapperParam>
-inline
-void
-Vector3DLICRendererExtractor<DataSetWrapperParam>::outOfDomainValueCallback(
+Vector3DLICRendererExtractor<DataSetWrapperParam>::LICStepSizeValueCallback(
 	GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData)
 	{
-	/* Find the index of the slider: */
-	int channel;
-	for(channel=0;channel<3&&outOfDomainValueSliders[channel]!=cbData->slider;++channel)
-		;
-	if(channel<3)
-		{
-		/* Update the parameters dialog: */
-		parameters.outOfDomainValues[channel]=VScalar(cbData->value);
-		}
+        if(cbData->slider == LICStepSizeValueSlider)
+                {
+                parameters.licStepSize = Scalar(cbData->value);
+                }
 	}
 
 }

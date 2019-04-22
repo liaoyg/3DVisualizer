@@ -58,7 +58,7 @@ class Vector3DLICRenderer:public Visualization::Abstract::Element
 	
 	/* UI components: */
 	GLMotif::ToggleButton* channelEnabledToggles[3]; // Toggle buttons to enable/disable individual channels
-	GLMotif::TextFieldSlider* transparencyGammaSliders[3]; // Slider to change current gamma correction factor for each channel
+	GLMotif::TextFieldSlider* transparencyGammaSlider; // Slider to change current gamma correction factor for each channel
 	
 	/* Constructors and destructors: */
 	public:
@@ -81,7 +81,6 @@ class Vector3DLICRenderer:public Visualization::Abstract::Element
 	
 	/* New methods: */
 	void sliceFactorCallback(GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData);
-	void channelEnabledCallback(GLMotif::ToggleButton::ValueChangedCallbackData* cbData);
 	void transparencyGammaCallback(GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData);
 	};
 

@@ -215,7 +215,7 @@ void LICRaycaster::bindShader(const Raycaster::PTransform& pmv,const Raycaster::
 
         /* Create the stepsize-adjusted colormap with pre-multiplied alpha: */
         GLColorMap adjustedColorMap(*colorMap);
-        adjustedColorMap.changeTransparency(stepSize*transparencyGammas[0]);
+        adjustedColorMap.changeTransparency(stepSize*transparencyGamma);
         adjustedColorMap.premultiplyAlpha();
         glTexImage1D(GL_TEXTURE_1D,0,myDataItem->haveFloatTextures?GL_RGBA32F_ARB:GL_RGBA,256,0,GL_RGBA,GL_FLOAT,adjustedColorMap.getColors());
 
@@ -362,10 +362,7 @@ LICRaycaster::LICRaycaster(const unsigned int sDataSize[3],const Raycaster::Box&
 	
 	/* Initialize the channels and color maps: */
         colorMap=0;
-	for(int channel=0;channel<3;++channel)
-		{
-		transparencyGammas[channel]=1.0f;
-		}
+	transparencyGamma=1.0f;
         if(!loadNoiseTexture())
                 {
                 std::cerr<<"LICRaycaster::initContext: Caught exception when loading noise texture "<<std::endl;
@@ -430,7 +427,7 @@ void LICRaycaster::setColorMap(const GLColorMap* newColorMap)
 	colorMap=newColorMap;
 	}
 
-void LICRaycaster::setTransparencyGamma(int channel,GLfloat newTransparencyGamma)
+void LICRaycaster::setTransparencyGamma(GLfloat newTransparencyGamma)
 	{
-	transparencyGammas[channel]=newTransparencyGamma;
+	transparencyGamma=newTransparencyGamma;
 	}

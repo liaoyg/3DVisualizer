@@ -57,12 +57,7 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 	:Visualization::Abstract::Element(algorithm->getVariableManager(),sParameters),
 	 raycaster(0)
 	{
-	for(int channel=0;channel<3;++channel)
-		{
-		channelEnabledToggles[channel]=0;
-		transparencyGammaSliders[channel]=0;
-		}
-	
+	transparencyGammaSlider=0;
 	/* Get proper pointers to the algorithm and parameter objects: */
 	typedef Vector3DLICRendererExtractor<DataSetWrapper> MyAlgorithm;
 	typedef typename MyAlgorithm::Parameters MyParameters;
@@ -117,17 +112,13 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 //		sampler.sampleDirect(se,minValue,raycaster->getData(channel),raycaster->getDataStrides(),algorithm->getPipe(),100.0f/3.0f,100.0f*float(channel)/3.0f,algorithm);
         sampler.sampleVec(ve,raycaster->getData(0),raycaster->getDataStrides(),algorithm->getPipe(),100.0f,0.0f,algorithm);
         raycaster->setColorMap(variableManager->getColorMapLIC());
-        for(int channel=0;channel<3;++channel)
-                {
-                /* Set the channel's parameters: */
-//                raycaster->setChannelEnabled(channel,myParameters->channelEnableds[channel]);
-                raycaster->setTransparencyGamma(channel,myParameters->transparencyGammas[channel]);
-                }
+        raycaster->setTransparencyGamma(myParameters->transparencyGamma);
                 
 	raycaster->updateData();
 	
 	/* Set the raycaster's step size: */
 	raycaster->setStepSize(myParameters->sliceFactor);
+        raycaster->setLICStepSize(myParameters->licStepSize);
 	}
 
 template <class DataSetWrapperParam>
@@ -164,28 +155,15 @@ Vector3DLICRenderer<DataSetWrapperParam>::createSettingsDialog(
 	sliceFactorSlider->setValueRange(0.1,10.0,0.1);
 	sliceFactorSlider->setValue(raycaster->getStepSize());
 	sliceFactorSlider->getValueChangedCallbacks().add(this,&Vector3DLICRenderer::sliceFactorCallback);
-	
-	for(int channel=0;channel<3;++channel)
-		{
-		/* Create a toggle button to enable / disable the channel: */
-		char name[40],label[20];
-		snprintf(name,sizeof(name),"ChannelEnabledToggle%d",channel);
-		snprintf(label,sizeof(label),"Channel %d",channel+1);
-		channelEnabledToggles[channel]=new GLMotif::ToggleButton(name,settingsDialog,label);
-		channelEnabledToggles[channel]->setToggleType(GLMotif::ToggleButton::TOGGLE_BUTTON);
-//		channelEnabledToggles[channel]->setToggle(raycaster->getChannelEnabled(channel));
-		channelEnabledToggles[channel]->getValueChangedCallbacks().add(this,&Vector3DLICRenderer::channelEnabledCallback);
-		
-		/* Create a slider to change the transparency gamma factor: */
-		snprintf(name,sizeof(name),"TransparencyGammaSlider%d",channel);
-		transparencyGammaSliders[channel]=new GLMotif::TextFieldSlider(name,settingsDialog,6,ss->fontHeight*10.0f);
-		transparencyGammaSliders[channel]->getTextField()->setFloatFormat(GLMotif::TextField::FIXED);
-		transparencyGammaSliders[channel]->getTextField()->setPrecision(3);
-		transparencyGammaSliders[channel]->setSliderMapping(GLMotif::TextFieldSlider::EXP10);
-		transparencyGammaSliders[channel]->setValueRange(0.1,10.0,0.1);
-		transparencyGammaSliders[channel]->setValue(raycaster->getTransparencyGamma(channel));
-		transparencyGammaSliders[channel]->getValueChangedCallbacks().add(this,&Vector3DLICRenderer::transparencyGammaCallback);
-		}
+        
+        new GLMotif::Label("TransparencyGammaSliderLabel",settingsDialog,"Transparency Gamma");
+        transparencyGammaSlider=new GLMotif::TextFieldSlider("TransparencyGammaSlider",settingsDialog,6,ss->fontHeight*10.0f);
+        transparencyGammaSlider->getTextField()->setFloatFormat(GLMotif::TextField::FIXED);
+        transparencyGammaSlider->getTextField()->setPrecision(3);
+        transparencyGammaSlider->setSliderMapping(GLMotif::TextFieldSlider::EXP10);
+        transparencyGammaSlider->setValueRange(0.1,10.0,0.1);
+        transparencyGammaSlider->setValue(raycaster->getTransparencyGamma());
+        transparencyGammaSlider->getValueChangedCallbacks().add(this,&Vector3DLICRenderer::transparencyGammaCallback);
 	
 	settingsDialog->manageChild();
 	
@@ -240,25 +218,6 @@ Vector3DLICRenderer<DataSetWrapperParam>::sliceFactorCallback(
 template <class DataSetWrapperParam>
 inline
 void
-Vector3DLICRenderer<DataSetWrapperParam>::channelEnabledCallback(
-	GLMotif::ToggleButton::ValueChangedCallbackData* cbData)
-	{
-	/* Get proper pointer to the parameter object: */
-	typename Vector3DLICRendererExtractor<DataSetWrapper>::Parameters* myParameters=dynamic_cast<typename Vector3DLICRendererExtractor<DataSetWrapper>::Parameters*>(getParameters());
-	if(myParameters==0)
-		Misc::throwStdErr("Vector3DLICRenderer: Mismatching parameter object type");
-	
-	for(int channel=0;channel<3;++channel)
-		if(cbData->toggle==channelEnabledToggles[channel])
-			{
-			/* Enable or disable the channel: */
-//			raycaster->setChannelEnabled(channel,cbData->set);
-			}
-	}
-
-template <class DataSetWrapperParam>
-inline
-void
 Vector3DLICRenderer<DataSetWrapperParam>::transparencyGammaCallback(
 	GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData)
 	{
@@ -268,15 +227,14 @@ Vector3DLICRenderer<DataSetWrapperParam>::transparencyGammaCallback(
 		Misc::throwStdErr("Vector3DLICRenderer: Mismatching parameter object type");
 	
 	/* Find the changed channel: */
-	for(int channel=0;channel<3;++channel)
-		if(cbData->slider==transparencyGammaSliders[channel])
-			{
-			/* Change the transparency gamma factor: */
-			float transparencyGamma=float(cbData->value);
-			myParameters->transparencyGammas[channel]=transparencyGamma;
-			raycaster->setTransparencyGamma(channel,transparencyGamma);
-			}
-	}
+	if(cbData->slider==transparencyGammaSlider)
+                {
+                /* Change the transparency gamma factor: */
+                float transparencyGamma=float(cbData->value);
+                myParameters->transparencyGamma=transparencyGamma;
+                raycaster->setTransparencyGamma(transparencyGamma);
+                }
+        }
 
 }
 

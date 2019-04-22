@@ -79,11 +79,12 @@ class Vector3DLICRendererExtractor:public Visualization::Abstract::Algorithm
 		/* Elements: */
 		private:
                 int vectorVariableIndex;
-		int scalarVariableIndices[3]; // Indices of the scalar variables for direct volume rendering
-		VScalar outOfDomainValues[3]; // Values to assign to volume renderer voxels that are outside the data set's domain
 		Scalar sliceFactor; // Slice distance for texture- or raycasting-based volume rendering
-		bool channelEnableds[3]; // Enable flags for each channel
-		float transparencyGammas[3]; // Overall transparency adjustment factors for each channel
+                Scalar licStepSize;
+                int fowardIteration, backwardIteration;
+                Scalar noiseFrequency;
+                Scalar illuminScale;
+		float transparencyGamma; // Overall transparency adjustment factors for each channel
 		
 		/* Methods from Abstract::Parameters: */
 		virtual bool isValid(void) const
@@ -104,9 +105,8 @@ class Vector3DLICRendererExtractor:public Visualization::Abstract::Algorithm
 	Parameters parameters; // The volume renderer extraction parameters used by this extractor
 	
 	/* UI components: */
-	GLMotif::DropdownBox* scalarVariableBoxes[3]; // Dropdown boxes to select the scalar variables for each channel
-	GLMotif::TextFieldSlider* outOfDomainValueSliders[3]; // Sliders to select out-of-domain values for each channel
-	
+	GLMotif::TextFieldSlider* LICStepSizeValueSlider;
+        
 	/* Constructors and destructors: */
 	public:
 	Vector3DLICRendererExtractor(Visualization::Abstract::VariableManager* sVariableManager,Cluster::MulticastPipe* sPipe); // Creates a volume renderer extractor
@@ -135,8 +135,7 @@ class Vector3DLICRendererExtractor:public Visualization::Abstract::Algorithm
 		{
 		return name;
 		}
-	void scalarVariableBoxCallback(GLMotif::DropdownBox::ValueChangedCallbackData* cbData);
-	void outOfDomainValueCallback(GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData);
+	void LICStepSizeValueCallback(GLMotif::TextFieldSlider::ValueChangedCallbackData* cbData);
 	};
 
 }

@@ -72,7 +72,8 @@ class LICRaycaster:public Raycaster
         unsigned int noiseSize[3];
         Voxel* nData; // Pointer to the noise texture dataset
 	const GLColorMap* colorMap; // Pointers to the three channel color maps
-	GLfloat transparencyGammas[3]; // Adjustment factor for each color map's overall opacity
+	GLfloat transparencyGamma; // Adjustment factor for each color map's overall opacity
+        Scalar licStepSize;
 	
 	/* Protected methods: */
 	protected:
@@ -96,6 +97,15 @@ class LICRaycaster:public Raycaster
 	
 	/* Methods from Raycaster: */
 	virtual void setStepSize(Scalar newStepSize);
+        
+        void setLICStepSize(Scalar newStepSize)
+                {
+                licStepSize = newStepSize;
+                }
+        Scalar getLICStepSize()
+                {
+                return licStepSize;
+                }
 	
 	/* New methods: */
 	const Voxel* getData(int channel) const // Returns pointer to the volume dataset for the given channel
@@ -113,11 +123,11 @@ class LICRaycaster:public Raycaster
 		return colorMap;
 		}
 	void setColorMap(const GLColorMap* newColorMap); // Sets the raycaster's color map
-	GLfloat getTransparencyGamma(int channel) const // Returns the opacity adjustment factor 
+	GLfloat getTransparencyGamma() const // Returns the opacity adjustment factor 
 		{
-		return transparencyGammas[channel];
+		return transparencyGamma;
 		}
-	void setTransparencyGamma(int channel,GLfloat newTransparencyGamma); // Sets the opacity adjustment factor for the given scalar channel
+	void setTransparencyGamma(GLfloat newTransparencyGamma); // Sets the opacity adjustment factor for the given scalar channel
 	};
 
 #endif
