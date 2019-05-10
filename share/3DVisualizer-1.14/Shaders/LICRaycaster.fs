@@ -33,6 +33,7 @@ uniform vec3 licKernel;  // kernel step width forward (0.5/licParams.x),
 uniform vec3 licParams;  // lics steps forward, backward, lic step width
 
 uniform sampler3D volumeSampler;
+uniform sampler3D maskSampler;
 uniform sampler3D noiseSampler;
 uniform sampler2D licKernelSampler;
 
@@ -171,7 +172,8 @@ void main()
 			
 			//vec3 data=texture3D(volumeSampler,samplePos).xyz;
 			vec4 vec=texture3D(volumeSampler,samplePos);
-			if(vec.a > 0.01)
+			vec4 mask = texture3D(maskSampler, samplePos);
+			if(mask.a > 0.01)
 				{
 				vec3 data = computeLIC(samplePos, vec, volumeSampler).xyz;	
 

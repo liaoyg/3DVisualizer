@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Vrui/ToolManager.h>
 #include <Vrui/Application.h>
 
+#include <LICBrushMask.h>
+
 /* Forward declarations: */
 namespace GLMotif {
 class Widget;
@@ -105,6 +107,10 @@ class Visualizer:public Vrui::Application
 	friend class ScalarEvaluationLocator;
 	friend class VectorEvaluationLocator;
 	friend class ExtractorLocator;
+        
+        
+	friend class BaseBrush;
+        friend class LICBrush;
 	
 	/* Elements: */
 	private:
@@ -128,6 +134,7 @@ class Visualizer:public Vrui::Application
 	CuttingPlane* cuttingPlanes; // Array of available cutting planes
 	BaseLocatorList baseLocators; // List of active locators
 	ElementList* elementList; // List of previously extracted visualization elements
+        LICBrushMask* mask; //a texture mask for all LIC algorithm
 	int algorithm; // The currently selected algorithm
 	GLMotif::PopupMenu* mainMenu; // The main menu widget
 	GLMotif::ToggleButton* showColorBarToggle; // Toggle button to show the color bar

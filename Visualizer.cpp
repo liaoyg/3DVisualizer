@@ -91,6 +91,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "ElementList.h"
 #include "GLRenderState.h"
 
+#include "LICBrush.h"
+
 /***************************
 Methods of class Visualizer:
 ***************************/
@@ -215,6 +217,9 @@ GLMotif::Popup* Visualizer::createAlgorithmsMenu(void)
 			algorithms->addToggle(module->getVectorAlgorithmName(i));
 			++algorithmIndex;
 			}
+                
+                algorithms->addToggle("LIC Brush");
+		++algorithmIndex;
 		}
 		
 	algorithms->setSelectedToggle(algorithm);
@@ -615,7 +620,7 @@ Visualizer::Visualizer(int& argc,char**& argv,char**& appDefaults)
 	 collaborationClient(0),sharedVisualizationClient(0),
 	 #endif
 	 numCuttingPlanes(0),cuttingPlanes(0),
-	 elementList(0),
+	 elementList(0), mask(0),
 	 algorithm(0),
 	 mainMenu(0),
 	 inLoadPalette(false),inLoadElements(false)
@@ -882,6 +887,9 @@ Visualizer::Visualizer(int& argc,char**& argv,char**& appDefaults)
 	/* Create the main menu: */
 	mainMenu=createMainMenu();
 	Vrui::setMainMenu(mainMenu);
+        
+        // Initialize the LIC noise texture mask
+        
 	
 	/* Create the element list: */
 	elementList=new ElementList(Vrui::getWidgetManager());
@@ -966,6 +974,11 @@ void Visualizer::toolCreationCallback(Vrui::ToolManager::ToolCreationCallbackDat
 				/* Create a vector evaluation locator object and associate it with the new tool: */
 				newLocator=new VectorEvaluationLocator(locatorTool,this,cbData->cfg);
 				}
+                        else if(algorithmName=="LIC Brush")
+				{
+				/* Create a vector evaluation locator object and associate it with the new tool: */
+				newLocator=new LICBrush(locatorTool,this,cbData->cfg);
+				}
 			else
 				{
 				/* Create an extractor locator: */
@@ -1010,13 +1023,17 @@ void Visualizer::toolCreationCallback(Vrui::ToolManager::ToolCreationCallbackDat
 				/* Create a vector evaluation locator object and associate it with the new tool: */
 				newLocator=new VectorEvaluationLocator(locatorTool,this);
 				}
-			else
+			else if(algorithm<firstVectorAlgorithmIndex+module->getNumVectorAlgorithms())
 				{
 				/* Create a data locator object and associate it with the new tool: */
 				int algorithmIndex=algorithm-firstVectorAlgorithmIndex;
 				Algorithm* extractor=module->getVectorAlgorithm(algorithmIndex,variableManager,Vrui::openPipe());
 				newLocator=new ExtractorLocator(locatorTool,this,extractor);
 				}
+                        else
+                                {
+                                newLocator=new LICBrush(locatorTool,this);
+                                }
 			}
 		
 		if(newLocator!=0)

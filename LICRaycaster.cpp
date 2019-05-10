@@ -42,6 +42,7 @@ Methods of class LICRaycaster::DataItem:
 
 LICRaycaster::DataItem::DataItem(void)
 	:haveFloatTextures(GLARBTextureFloat::isSupported()),
+         maskTextureID(0),maskTextureVersion(0),
 	 noiseTextureID(0), kernalTextureID(0),
          volumeTextureID(0),volumeTextureVersion(0), 
 	 volumeSamplerLoc(-1), noiseSamplerLoc(-1),
@@ -58,6 +59,7 @@ LICRaycaster::DataItem::DataItem(void)
 	/* Create the volume texture object: */
 	glGenTextures(1,&volumeTextureID);
         
+        glGenTextures(1,&maskTextureID);
         glGenTextures(1,&noiseTextureID);
         glGenTextures(1,&kernalTextureID);
 	
@@ -72,6 +74,7 @@ LICRaycaster::DataItem::~DataItem(void)
 	/* Destroy the volume texture object: */
 	glDeleteTextures(1,&volumeTextureID);
         
+        glDeleteTextures(1,&maskTextureID);
         glDeleteTextures(1,&noiseTextureID);
         glDeleteTextures(1,&kernalTextureID);
 	
@@ -101,7 +104,17 @@ void LICRaycaster::initDataItem(Raycaster::DataItem* dataItem) const
 	glTexImage3DEXT(GL_TEXTURE_3D,0,GL_RGBA16F_ARB,myDataItem->textureSize[0],myDataItem->textureSize[1],myDataItem->textureSize[2],0,GL_RGBA,GL_FLOAT,0);
 	glBindTexture(GL_TEXTURE_3D,0);
         
-        /* Create the data volume texture: */
+        /* Create the mask texture: */
+        glBindTexture(GL_TEXTURE_3D,myDataItem->maskTextureID);
+        glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_R,GL_CLAMP);
+	glTexImage3DEXT(GL_TEXTURE_3D,0,GL_RGBA16F_ARB,mask->getSize(0),mask->getSize(1),mask->getSize(2),0,GL_RGBA,GL_FLOAT,mask->getData());
+	glBindTexture(GL_TEXTURE_3D,0);
+        
+        /* Create the noise data texture: */
 	glBindTexture(GL_TEXTURE_3D,myDataItem->noiseTextureID);
         glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
@@ -164,6 +177,7 @@ void LICRaycaster::initShader(Raycaster::DataItem* dataItem) const
 	myDataItem->licKernelLoc=myDataItem->shader.getUniformLocation("licKernel");
 	myDataItem->licParamsLoc=myDataItem->shader.getUniformLocation("licParams");
 	myDataItem->volumeSamplerLoc=myDataItem->shader.getUniformLocation("volumeSampler");
+        myDataItem->maskSamplerLoc=myDataItem->shader.getUniformLocation("maskSampler");
         myDataItem->noiseSamplerLoc=myDataItem->shader.getUniformLocation("noiseSampler");
         myDataItem->kernalSamplerLoc=myDataItem->shader.getUniformLocation("licKernelSampler");
 	myDataItem->colorMapSamplerLoc=myDataItem->shader.getUniformLocation("colorMapSampler");
@@ -199,18 +213,35 @@ void LICRaycaster::bindShader(const Raycaster::PTransform& pmv,const Raycaster::
 		myDataItem->volumeTextureVersion=dataVersion;
 		}
         
+        
+        /* Bind the noise and kernel textures: */
+        /* Bind the volume texture: */
+	glActiveTextureARB(GL_TEXTURE2_ARB);
+	glBindTexture(GL_TEXTURE_3D,myDataItem->maskTextureID);
+	glUniform1iARB(myDataItem->maskSamplerLoc,2);
+	
+	/* Check if the volume texture needs to be updated: */
+	if(mask->getDataVersion()!=myDataItem->maskTextureVersion)
+		{
+		/* Upload the new mask data: */
+		glTexSubImage3DEXT(GL_TEXTURE_3D,0,0,0,0,mask->getSize(0),mask->getSize(1),mask->getSize(2),GL_RGBA,GL_FLOAT,mask->getData());
+		std::cout << "update mask data over." <<std::endl;
+		/* Mark the mask texture as up-to-date: */
+		myDataItem->maskTextureVersion=mask->getDataVersion();
+		}
+        
         /* Bind the noise and kernel textures: */
         
 //      std::cout << "bind noise texture:  " << myDataItem->noiseTextureID << " at : " << myDataItem->noiseSamplerLoc << std::endl;
-        glActiveTextureARB(GL_TEXTURE2_ARB);
-	glBindTexture(GL_TEXTURE_3D,myDataItem->noiseTextureID);
-	glUniform1iARB(myDataItem->noiseSamplerLoc,2);
         glActiveTextureARB(GL_TEXTURE3_ARB);
+	glBindTexture(GL_TEXTURE_3D,myDataItem->noiseTextureID);
+	glUniform1iARB(myDataItem->noiseSamplerLoc,3);
+        glActiveTextureARB(GL_TEXTURE4_ARB);
 	glBindTexture(GL_TEXTURE_2D,myDataItem->kernalTextureID);
-	glUniform1iARB(myDataItem->kernalSamplerLoc,3);
+	glUniform1iARB(myDataItem->kernalSamplerLoc,4);
 	
 	/* Bind the color map textures: */
-        glActiveTextureARB(GL_TEXTURE4_ARB);
+        glActiveTextureARB(GL_TEXTURE5_ARB);
         glBindTexture(GL_TEXTURE_1D,myDataItem->colorMapTextureID);
 
         /* Create the stepsize-adjusted colormap with pre-multiplied alpha: */
@@ -219,20 +250,22 @@ void LICRaycaster::bindShader(const Raycaster::PTransform& pmv,const Raycaster::
         adjustedColorMap.premultiplyAlpha();
         glTexImage1D(GL_TEXTURE_1D,0,myDataItem->haveFloatTextures?GL_RGBA32F_ARB:GL_RGBA,256,0,GL_RGBA,GL_FLOAT,adjustedColorMap.getColors());
 
-	glUniform1iARB(myDataItem->colorMapSamplerLoc,4);
+	glUniform1iARB(myDataItem->colorMapSamplerLoc,5);
 	}
 
 void LICRaycaster::unbindShader(Raycaster::DataItem* dataItem) const
 	{
 	/* Unbind the color map textures: */
 
-        glActiveTextureARB(GL_TEXTURE4_ARB);
+        glActiveTextureARB(GL_TEXTURE5_ARB);
         glBindTexture(GL_TEXTURE_1D,0);
 
         
 	/* Unbind the noise and kernel texture: */
-	glActiveTextureARB(GL_TEXTURE3_ARB);
+	glActiveTextureARB(GL_TEXTURE4_ARB);
 	glBindTexture(GL_TEXTURE_2D,0);
+        glActiveTextureARB(GL_TEXTURE3_ARB);
+	glBindTexture(GL_TEXTURE_3D,0);
         glActiveTextureARB(GL_TEXTURE2_ARB);
 	glBindTexture(GL_TEXTURE_3D,0);
         
@@ -309,18 +342,15 @@ void LICRaycaster::loadKernelFunction(DataItem* dataItem) const
 
 float* LICRaycaster::paddingData(const unsigned int dataSize[3], Voxel* data) const
         {
-        std::cout<<"padding data: " << std::endl;
         int size = dataSize[0]*dataSize[1]*dataSize[2];
         float* padded = new float[4*size];
         float maxLen = 0.0f;
         int adr;
-        for(int z = 0; z < dataSize[2]; ++z)
-            for(int y = 0; y < dataSize[1]; ++y)
-                for(int x = 0; x < dataSize[0]; ++x)
+        for(unsigned int z = 0; z < dataSize[2]; ++z)
+            for(unsigned int y = 0; y < dataSize[1]; ++y)
+                for(unsigned int x = 0; x < dataSize[0]; ++x)
                 {
                     adr = (z*dataSize[1]+y)*dataSize[0]+x;
-                    std::cout << adr << ": ";
-                    std::cout << data[3*adr] << " " <<data[3*adr+1]<<" " << data[3*adr+2];
                     float len = Math::sqrt((float)Math::sqr(data[3 * adr]) + (float)Math::sqr(data[3 * adr + 1]) + (float)Math::sqr(data[3 * adr + 2]));
                     if(len < 1e-5f)
                     {
@@ -337,17 +367,15 @@ float* LICRaycaster::paddingData(const unsigned int dataSize[3], Voxel* data) co
                     }
                     maxLen = std::max(len, maxLen);
                     padded[4 * adr + 3] = len;
-                    std::cout << "convertTo: " << padded[4 * adr] << " " <<padded[4 * adr+1]<<" " << padded[4 * adr+2] << " " << padded[4 * adr+3] << std::endl;
                 }
-        for(int z = 0; z < dataSize[2]; ++z)
-            for(int y = 0; y < dataSize[1]; ++y)
-                for(int x = 0; x < dataSize[0]; ++x)
+        for(unsigned int z = 0; z < dataSize[2]; ++z)
+            for(unsigned int y = 0; y < dataSize[1]; ++y)
+                for(unsigned int x = 0; x < dataSize[0]; ++x)
                 {
                     adr = (z*dataSize[1]+y)*dataSize[0]+x;
                     float len = padded[4 * adr + 3]/maxLen;
                     padded[4 * adr + 3] = Math::clamp(len, 0.0f, 1.0f);
                 }
-        std::cout << "padding over." << std::endl;
         return padded;
         }
 
@@ -359,6 +387,9 @@ LICRaycaster::LICRaycaster(const unsigned int sDataSize[3],const Raycaster::Box&
 	/* Multiply the data stride values with the number of channels: */
 	for(int dim=0;dim<3;++dim)
 		dataStrides[dim]*=3;
+        /* Initialize the mask */
+//        mask = new LICBrushMask(dataSize);
+//        mask->semiSphereX(); //test texture funtion
 	
 	/* Initialize the channels and color maps: */
         colorMap=0;
@@ -431,3 +462,9 @@ void LICRaycaster::setTransparencyGamma(GLfloat newTransparencyGamma)
 	{
 	transparencyGamma=newTransparencyGamma;
 	}
+void LICRaycaster::setLICMask(LICBrushMask* sMask)
+        {
+        mask = sMask;
+        mask->resize(dataSize, domain);
+        mask->semiSphereX();
+        }

@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <GL/GLObject.h>
 #include <Abstract/DataSet.h>
 #include <PaletteEditor.h>
+#include <LICBrushMask.h>
 
 /* Forward declarations: */
 namespace Misc {
@@ -105,6 +106,7 @@ class VariableManager:public GLObject
         GLColorMap* colorMapLIC;
 	int currentScalarVariableIndex; // The index of the currently selected scalar variable
 	int currentVectorVariableIndex; // The index of the currently selected vector variable
+        LICBrushMask* mask;
 	
 	/* Private methods: */
 	void prepareScalarVariable(int scalarVariableIndex);
@@ -190,7 +192,13 @@ class VariableManager:public GLObject
 	void beginRenderPass(GLRenderState& renderState) const; // Prepares the variable manager for an OpenGL rendering pass
 	void bindColorMap(int scalarVariableIndex,GLRenderState& renderState) const; // Binds the given scalar variable's color map as a 1D texture in the given OpenGL render state
 	void endRenderPass(GLRenderState& renderState) const; // Cleans up the state of the given OpenGL context after a rendering pass
-	};
+	
+        LICBrushMask* getLICMask()
+                {
+                return mask;
+                }
+
+        };
 
 }
 

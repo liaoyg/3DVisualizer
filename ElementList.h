@@ -52,9 +52,7 @@ class ElementList
 	public:
 	typedef Visualization::Abstract::Element Element;
 	typedef Misc::Autopointer<Element> ElementPointer;
-	
-	private:
-	struct ListElement // Structure storing information relating to a visualization element
+        struct ListElement // Structure storing information relating to a visualization element
 		{
 		/* Elements: */
 		public:
@@ -64,9 +62,10 @@ class ElementList
 		bool settingsDialogVisible; // Flag if the element's settings dialog is currently popped up
 		bool show; // Flag if the element is being rendered
 		};
-	
 	typedef std::vector<ListElement> ListElementList;
 	
+	private:
+
 	/* Elements: */
 	private:
 	ListElementList elements; // List of previously extracted visualization elements
@@ -99,6 +98,8 @@ class ElementList
 		return elementListDialogPopup;
 		}
 	void renderElements(GLRenderState& renderState,bool transparent) const; // Renders all visible transparent or opaque elements
+        
+        std::vector<Element*> getActiveElements();
 	};
 
 #endif

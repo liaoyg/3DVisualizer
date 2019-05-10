@@ -302,3 +302,14 @@ void ElementList::renderElements(GLRenderState& renderState,bool transparent) co
 		if(veIt->show&&veIt->element->usesTransparency()==transparent)
 			veIt->element->glRenderAction(renderState);
 	}
+
+std::vector<ElementList::Element*> ElementList::getActiveElements()
+        {
+        std::vector<Element*> res;
+        for(ListElementList::const_iterator veIt=elements.begin();veIt!=elements.end();++veIt)
+            if(veIt->show)
+            {
+                res.push_back(veIt->element.getPointer());
+            }
+        return res;
+        }

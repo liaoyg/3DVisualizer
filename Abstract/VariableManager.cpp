@@ -199,6 +199,10 @@ VariableManager::VariableManager(const DataSet* sDataSet,const char* sDefaultCol
 	/* Initialize the current variable state: */
 	setCurrentScalarVariable(0);
 	setCurrentVectorVariable(0);
+        
+        // Initial mask
+        
+        mask = new LICBrushMask();
 	}
 
 VariableManager::~VariableManager(void)
@@ -215,6 +219,8 @@ VariableManager::~VariableManager(void)
 	
 	delete colorBarDialogPopup;
 	delete paletteEditor;
+        
+        delete mask;
 	}
 
 void VariableManager::initContext(GLContextData& contextData) const

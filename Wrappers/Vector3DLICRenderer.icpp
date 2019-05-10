@@ -86,6 +86,7 @@ Vector3DLICRenderer<DataSetWrapperParam>::Vector3DLICRenderer(
 	
 	/* Initialize the raycaster: */
 	raycaster=new LICRaycaster(sampler.getSamplerSize(),ds.getDomainBox());
+        raycaster->setLICMask(variableManager->getLICMask());
 	
 	/* Sample the three scalar channels: */
 

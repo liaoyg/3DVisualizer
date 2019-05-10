@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <GL/GLColorMap.h>
 
 #include <Raycaster.h>
+#include <LICBrushMask.h>
 
 class LICRaycaster:public Raycaster
 	{
@@ -41,6 +42,8 @@ class LICRaycaster:public Raycaster
 		public:
 		bool haveFloatTextures; // Flag whether the local OpenGL supports floating-point textures
 		
+                GLuint maskTextureID;
+                unsigned int maskTextureVersion;
                 GLuint noiseTextureID; // Texture object ID for noise data texture
                 GLuint kernalTextureID; // Texture object ID for kernel texture
 		GLuint volumeTextureID; // Texture object ID for volume data texture
@@ -56,6 +59,7 @@ class LICRaycaster:public Raycaster
 		int licKernelLoc; // Location of kernel step width and inverse funtion area
                 int licParamsLoc; // Location of LIC steps number and step size
 		int volumeSamplerLoc; // Location of the volume data texture sampler
+                int maskSamplerLoc; // Location of the mask texture sampler
                 int noiseSamplerLoc; // Location of the random noise texture sampler
                 int kernalSamplerLoc; // Location of the random noise texture sampler
 		int colorMapSamplerLoc; // Location of the three color map texture samplers
@@ -71,6 +75,7 @@ class LICRaycaster:public Raycaster
 	unsigned int dataVersion; // Version number of the volume dataset to track changes
         unsigned int noiseSize[3];
         Voxel* nData; // Pointer to the noise texture dataset
+        LICBrushMask* mask;
 	const GLColorMap* colorMap; // Pointers to the three channel color maps
 	GLfloat transparencyGamma; // Adjustment factor for each color map's overall opacity
         Scalar licStepSize;
@@ -128,6 +133,10 @@ class LICRaycaster:public Raycaster
 		return transparencyGamma;
 		}
 	void setTransparencyGamma(GLfloat newTransparencyGamma); // Sets the opacity adjustment factor for the given scalar channel
+        
+        void setLICMask(LICBrushMask* sMask);
+         
 	};
+        
 
 #endif
