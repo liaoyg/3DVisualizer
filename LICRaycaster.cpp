@@ -151,11 +151,11 @@ void LICRaycaster::initDataItem(Raycaster::DataItem* dataItem) const
         
         myDataItem->gradient[0] = GLfloat(30.0);
         myDataItem->gradient[1] = GLfloat(1.0);
-        myDataItem->gradient[2] = GLfloat(4.0);
+        myDataItem->gradient[2] = GLfloat(6.0);
         
         myDataItem->licParams[0] = GLfloat(32);
         myDataItem->licParams[1] = GLfloat(32);
-        myDataItem->licParams[2] = GLfloat(1.0/256.0);
+        myDataItem->licParams[2] = GLfloat(1.0/150.0);
         
         myDataItem->licKernel[0] = GLfloat(0.5/myDataItem->licParams[0]);
         myDataItem->licKernel[1] = GLfloat(0.5/myDataItem->licParams[1]);
@@ -466,5 +466,5 @@ void LICRaycaster::setLICMask(LICBrushMask* sMask)
         {
         mask = sMask;
         mask->resize(dataSize, domain);
-        mask->semiSphereX();
+//        mask->semiSphereX();
         }

@@ -45,10 +45,14 @@ varying vec3 dcPosition;
 // 3D LIC functions
 
 float noiseLookup(in vec3 objPos, in float freqScale)
-{
-    vec3 freqTexCoord = objPos * freqScale;
-    return texture3D(noiseSampler, freqTexCoord).a;
-}
+	{
+	vec4 nmask = texture3D(maskSampler, objPos);
+	vec3 freqTexCoord = objPos * freqScale;
+	if(nmask.g > 0.01)
+		return texture3D(noiseSampler, freqTexCoord).a;
+	else
+		return 0.0;
+	}
 
 float freqSampling(in vec3 pos, in sampler3D vectorVolume)
 	{
@@ -173,7 +177,8 @@ void main()
 			//vec3 data=texture3D(volumeSampler,samplePos).xyz;
 			vec4 vec=texture3D(volumeSampler,samplePos);
 			vec4 mask = texture3D(maskSampler, samplePos);
-			if(mask.a > 0.01)
+			//if(vec.a > 0.01 && mask.r > 0.01)
+			if(mask.r > 0.01)
 				{
 				vec3 data = computeLIC(samplePos, vec, volumeSampler).xyz;	
 

@@ -90,24 +90,35 @@ void LICBrushMask::semiSphereX()
 void LICBrushMask::updateMaskByBrush(Vrui::Point brushPos, Vrui::Scalar brushSize, Voxel value)
         {
         std::cout << "update with brush at: "<<brushPos[0]<<" "<<brushPos[1]<<" "<<brushPos[2]<<" with value: "<<value<< std::endl;
-        Geometry::Box<int,3> ranges;
+        Geometry::Box<int,3> ranges_v, ranges_n;
+        Scalar nBrushSize = 0.4*brushSize;
         for(int dim = 0; dim < 3; dim++)
                 {
-                ranges.min[dim] = mdataSize[dim]*(brushPos[dim]-brushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
-                ranges.min[dim] = Math::clamp<int>(ranges.min[dim], 0, mdataSize[dim]-1);
-                ranges.max[dim] = mdataSize[dim]*(brushPos[dim]+brushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
-                ranges.max[dim] = Math::clamp<int>(ranges.max[dim], 0, mdataSize[dim]-1);
-                std::cout <<dim<< "range: " << int(ranges.min[dim]) << " " << int(ranges.max[dim])<<std::endl; 
+                ranges_v.min[dim] = mdataSize[dim]*(brushPos[dim]-brushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
+                ranges_v.min[dim] = Math::clamp<int>(ranges_v.min[dim], 0, mdataSize[dim]-1);
+                ranges_n.min[dim] = mdataSize[dim]*(brushPos[dim]-nBrushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
+                ranges_n.min[dim] = Math::clamp<int>(ranges_n.min[dim], 0, mdataSize[dim]-1);
+                ranges_v.max[dim] = mdataSize[dim]*(brushPos[dim]+brushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
+                ranges_v.max[dim] = Math::clamp<int>(ranges_v.max[dim], 0, mdataSize[dim]-1);
+                ranges_n.max[dim] = mdataSize[dim]*(brushPos[dim]+nBrushSize - mDomain.min[dim])/(mDomain.max[dim] - mDomain.min[dim]);
+                ranges_n.max[dim] = Math::clamp<int>(ranges_n.max[dim], 0, mdataSize[dim]-1);
+//                std::cout <<dim<< "range: " << int(ranges_v.min[dim]) << " " << int(ranges_v.max[dim])<<std::endl; 
                 }
-        for(int x = ranges.min[0]; x <= ranges.max[0]; x++)
-            for(int y = ranges.min[1]; y <= ranges.max[1]; y++)
-                for(int z = ranges.min[2]; z <= ranges.max[2]; z++)
+        for(int x = ranges_v.min[0]; x <= ranges_v.max[0]; x++)
+            for(int y = ranges_v.min[1]; y <= ranges_v.max[1]; y++)
+                for(int z = ranges_v.min[2]; z <= ranges_v.max[2]; z++)
                         {
                         long adr = (y+z*mdataSize[1])*mdataSize[0]+x;
-                        mdata[4*adr] = value;
-                        mdata[4*adr+1] = value;
-                        mdata[4*adr+2] = value;
-                        mdata[4*adr+3] = value;
+                        mdata[4*adr] = value; //r is stored vector_field_mask
+                        if(x>=ranges_n.min[0] && x <= ranges_n.max[0] && 
+                                y>=ranges_n.min[1] && y <= ranges_n.max[1] &&
+                                    z>=ranges_n.min[2] && z <= ranges_n.max[2])
+                                mdata[4*adr+1] = value;
+                        
+//                        mdata[4*adr+1] = value;
+//                        mdata[4*adr+2] = value;
+//                        mdata[4*adr+3] = value;
+//                        std::cout <<"mdata: "<<mdata[4*adr]<<" "<<mdata[4*adr+1]<<" "<<mdata[4*adr+2]<<" "<<mdata[4*adr+3]<<std::endl;
                         }
         mVersion++;
         }

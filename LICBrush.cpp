@@ -39,7 +39,7 @@ LICBrush::LICBrush(Vrui::LocatorTool* sLocatorTool,Visualizer* sApplication, con
         locator(application->dataSet->getLocator()),
         dragging(false),hasPoint(false)
         {
-        brushSize = 0.03;
+        brushSize = 0.1;
         }
 
 LICBrush::~LICBrush() 
